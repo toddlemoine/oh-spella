@@ -1,19 +1,30 @@
 import 'rxjs';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import Error from './Error';
+// service worker
 import registerServiceWorker from './registerServiceWorker';
+// routing
 import history from './history';
 import routes from './routes';
 import router from './router';
-
+// redux
 import { Provider } from 'react-redux';
-import { createStore } from 'redux';
+import { createStore, applyMiddleware } from 'redux';
+import { createEpicMiddleware } from 'redux-observable';
+import letterPressEpic from './epics/letterPressEpic';
 import appReducer from './reducers/appReducer';
+// our app components
+import App from './App';
+import Error from './Error';
+import './index.css';
 
-const store = createStore(appReducer);
+
+const epicMiddleware = createEpicMiddleware(letterPressEpic);
+
+const store = createStore(
+  appReducer,
+  applyMiddleware(epicMiddleware)
+);
 
 function renderApp(component) {
   ReactDOM.render(

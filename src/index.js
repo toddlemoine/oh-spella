@@ -1,3 +1,4 @@
+import 'rxjs';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
@@ -8,18 +9,26 @@ import history from './history';
 import routes from './routes';
 import router from './router';
 
+import { Provider } from 'react-redux';
+import { createStore } from 'redux';
+import appReducer from './reducers/appReducer';
+
+const store = createStore(appReducer);
+
 function renderApp(component) {
   ReactDOM.render(
-    <App>{ component }</App>,
+    <Provider store={store}>
+      <App>{ component }</App>
+    </Provider>,
     document.getElementById('root'));
 }
 
-function render(location) {
+function handleRoute(location) {
   router.resolve(routes, location)
     .then(renderApp)
     .catch((error) => renderApp(<Error message={ error.message } />))
 }
 
 registerServiceWorker();
-render(history.location);
-history.listen(render);
+handleRoute(history.location);
+history.listen(handleRoute);

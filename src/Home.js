@@ -1,7 +1,17 @@
-import React from 'react';
+import { connect } from 'react-redux';
+import Form from './Form';
+import { letterPress } from './actions';
 
-function Home() {
-  return <div>Home!</div>;
+function mapStateToProps(state) {
+  return state;
 }
 
-export default Home;
+function mapDispatchToProps(dispatch) {
+  return {
+    onKeyPress(e) {
+      dispatch(letterPress(e.which));
+    }
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Form);

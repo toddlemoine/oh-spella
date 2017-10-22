@@ -1,6 +1,6 @@
-import { connect } from 'react-redux';
-import Form from './Form';
-import { letterPress } from './actions';
+import { connect } from "react-redux";
+import Form from "./Form";
+import { letterPress } from "./actions";
 
 function mapStateToProps(state) {
   return state;
@@ -9,9 +9,9 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
   return {
     onKeyPress(e) {
-      dispatch(letterPress(e.which));
+      dispatch(letterPress(e.key));
     }
-  }
+  };
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Form);

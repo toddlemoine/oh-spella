@@ -1,11 +1,11 @@
-import React from 'react';
+import React from "react";
 
-function Form({ letter, onKeyPress }) {
+function Form({ text, onKeyPress }) {
   return (
     <form>
       <label>Press a key</label>
       <input type="text" onKeyPress={onKeyPress} />
-      <p>You pressed { letter }</p>
+      <p>You pressed {text}</p>
     </form>
   );
 }

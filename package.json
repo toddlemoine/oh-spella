@@ -19,5 +19,11 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
+  },
+  "main": "index.js",
+  "author": "Todd Lemoine <tlemoine@jamasoftware.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "prettier": "1.7.4"
   }
 }

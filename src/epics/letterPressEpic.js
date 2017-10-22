@@ -1,7 +1,8 @@
+import { speak } from "../letters/speech";
 export default action$ =>
   action$
-    .ofType('LETTERPRESS')
-    // .filter(action => action.type === 'LETTERPRESS')
-    // do something async here
-    .delay(1000)
-    .map(action => ({ type: 'LETTERPRESS_COMPLETE', letter: action.letter }));
+    .ofType("LETTERPRESS")
+    .mergeMap($action => speak($action.letter))
+    .map(
+      text => (console.log("complete", text), { type: "SPEECH_COMPLETE", text })
+    );

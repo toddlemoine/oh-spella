@@ -10,6 +10,6 @@ function _speak(text) {
   });
 }
 
-export const speak = async text => {
+export const say = async text => {
   return await _speak(text);
 };

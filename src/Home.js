@@ -1,12 +1,12 @@
 import { connect } from "react-redux";
 import Form from "./Form";
-import { letterPress } from "./actions";
+import { letterPress } from "./letters";
 
 function mapStateToProps(state) {
   return state;
 }
 
-function mapDispatchToProps(dispatch) {
+function mapDispatchToProps(dispatch, ownState) {
   return {
     onKeyPress(e) {
       dispatch(letterPress(e.key));

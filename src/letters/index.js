@@ -1,28 +1,67 @@
 import { speak } from "./speech";
+import { isCorrectWord } from "./validator";
 
+// Action constants
 const LETTERPRESS = "LETTERPRESS";
+const WRONG_LETTER = "WRONG_LETTER";
+const VALIDATE_LETTER = "VALIDATE_LETTER";
+const SPEECH_COMPLETE = "SPEECH_COMPLETE";
+const WORD_SPELLED_CORRECTLY = "WORD_SPELLED_CORRECTLY";
+const INCORRECT_LETTER = "INCORRECT_LETTER";
+
+// Initial State
+const initialState = {
+  // wordList: ["big", "grip", "list"],
+  word: "big",
+  userWord: "",
+  userHistory: []
+};
+
+// Reducer
+const lettersReducer = (state = initialState, action) => {
+  switch (action.type) {
+    default:
+      return state;
+  }
+};
 
 // Actions
 export const letterPress = letter => {
   return {
-    type: "LETTERPRESS",
+    type: LETTERPRESS,
     letter
   };
 };
 
-// Epics
-export const letterPressEpic = action$ =>
-  action$
-    .ofType("LETTERPRESS")
-    .mergeMap($action => speak($action.letter))
-    .map($action => ({ type: "LETTERPRESS_COMPLETE", letter: $action.letter }));
+export const wordSpelledCorrectly = word => {
+  return {
+    type: WORD_SPELLED_CORRECTLY,
+    word
+  };
+};
+// Thunk Action
+export const validate = (letter, userWord, word) => {
+  return dispatch => {
+    if (isCorrectWord(attemptedWord, word)) {
+      dispatch(wordSpelledCorrectly(word));
+    } else {
+      dispatch(incorrectLetter(letter));
+    }
+  };
+};
 
-// Reducer
-export default function lettersReducer(state, action) {
-  switch (action.type) {
-    case LETTERPRESS:
-      return { ...state, letter: action.letter };
-    case LETTERPRESS_COMPLETE:
-      return { ...state, word: state.word + action.letter };
-  }
-}
+// Epics
+export const lettersEpic = (action$, store) =>
+  action$
+    .ofType(LETTERPRESS)
+    .mergeMap($action => speak($action.letter))
+    .map(text => ({ type: SPEECH_COMPLETE, text }));
+
+export const wordSpelledCorrectlyEpic = action$ => {
+  const speech = `${word}. Correct!`;
+  action$
+    .ofType(WORD_SPELLED_CORRECTLY)
+    .mergeMap($action => speak(speech))
+    .map(text => ({ type: SPEECH_COMPLETE, text }));
+};
+export default lettersReducer;

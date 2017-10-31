@@ -88,13 +88,18 @@ function repeatWord(action, state) {
   say(state.currentWord);
 }
 
-function nextWord(_, state) {
+function nextWord(state) {
   const { wordList, stats } = state;
   const currentWord = wordList[stats.length];
   stats.push(createStats(currentWord));
   state.currentWord = currentWord;
+  state.userWord = "";
   state.complete = false;
   return state;
+}
+
+function handleNextWord(_, state) {
+  return Observable.of(nextWord(state));
 }
 
 function currentStat(stats) {
@@ -131,14 +136,14 @@ function createStats(word) {
 const actionHandlers = combineHandlers(
   ["letter", validateUserWord],
   ["letter", validateComplete],
-  ["next-word", nextWord],
+  ["next-word", handleNextWord],
   ["repeat-word", repeatWord]
 );
 
 export function initialize(node) {
   console.log("initialize");
 
-  let _state = nextWord(null, shuffleWordList({ ...initialState }));
+  let _state = nextWord(shuffleWordList({ ...initialState }));
 
   const gameState$ = new BehaviorSubject(_state)
     .scan((acc, val) => ((_state = { ...acc, ...val }), _state))

@@ -1,4 +1,4 @@
 import React from "react";
-import Home from "./Home";
+import GameContainer from "./GameContainer";
 
-export default [{ path: "/", action: () => <Home /> }];
+export default [{ path: "/", action: () => <GameContainer /> }];

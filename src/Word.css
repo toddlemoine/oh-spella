@@ -1,0 +1,7 @@
+.word {
+  display: flex;
+  justify-content: space-around;
+  width: 80%;
+  min-height: 200px;
+  margin: 1rem auto;
+}

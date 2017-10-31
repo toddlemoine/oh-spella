@@ -1,0 +1,14 @@
+.game {
+  padding: 2em;
+  transition: background 350ms;
+  background: transparent;
+}
+
+.game.wrong {
+  background: red;
+  color: #ffffff;
+}
+
+.game.speaking {
+  background: yellow;
+}

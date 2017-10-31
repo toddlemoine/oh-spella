@@ -3,13 +3,12 @@ function _speak(text) {
     const msg = new SpeechSynthesisUtterance();
     msg.text = text;
     msg.onend = () => {
-      console.log("end speech for", msg);
       resolve(text);
     };
     window.speechSynthesis.speak(msg);
   });
 }
 
-export const say = async text => {
-  return await _speak(text);
+export const say = text => {
+  return _speak(text);
 };

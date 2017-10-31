@@ -5,7 +5,7 @@ const initialWordList = "big list web grip ball small".split(" ");
 
 const initialState = {
   wordList: initialWordList,
-  currentWord: "big",
+  currentWord: "",
   userWord: "",
   complete: false,
   stats: []
@@ -52,20 +52,17 @@ function action(type, attrs) {
 }
 
 function validateUserWord({ text }, state) {
-  console.log("validateUserWord", text, state);
   const attempt = state.userWord + text;
   const isValid = validGuess(attempt, state.currentWord);
   updateLetterStats(text, state);
   updateCorrectnessStats(isValid, state);
-  const stream$ = Observable.of(say(text))
+  return Observable.of(say(text))
     .filter(text => isValid)
-    .do(() => console.log(attempt, "is valid attempt; mapping to"))
+    .do(() => console.log(attempt, "is valid"))
     .mapTo({ userWord: attempt });
-  return stream$;
 }
 
 function validateComplete({ text }, state) {
-  console.log("validateComplete", text);
   const complete = state.userWord + text === state.currentWord;
   if (complete) say("complete");
   updateCompleteStats(complete, state);
@@ -75,31 +72,33 @@ function validateComplete({ text }, state) {
 function combineHandlers(...handlers) {
   return function(action, state) {
     console.log("action:", action.type);
-    const stream$ = Observable.from(
+    return Observable.from(
       handlers
         .filter(([type, _]) => type === action.type)
         .map(([type, fn]) => fn(action, state))
     ).mergeAll();
-    return stream$;
   };
 }
 
 function repeatWord(action, state) {
   say(state.currentWord);
+  return state;
+}
+
+function resetState(state) {
+  return { ...state, userWord: "", complete: false };
 }
 
 function nextWord(state) {
   const { wordList, stats } = state;
   const currentWord = wordList[stats.length];
-  stats.push(createStats(currentWord));
   state.currentWord = currentWord;
-  state.userWord = "";
-  state.complete = false;
+  stats.push(createStats(currentWord));
   return state;
 }
 
 function handleNextWord(_, state) {
-  return Observable.of(nextWord(state));
+  return Observable.of(nextWord(resetState(state)));
 }
 
 function currentStat(stats) {
@@ -137,13 +136,13 @@ const actionHandlers = combineHandlers(
   ["letter", validateUserWord],
   ["letter", validateComplete],
   ["next-word", handleNextWord],
-  ["repeat-word", repeatWord]
+  ["repeat", repeatWord]
 );
 
 export function initialize(node) {
   console.log("initialize");
 
-  let _state = nextWord(shuffleWordList({ ...initialState }));
+  let _state = nextWord(shuffleWordList(resetState({ ...initialState })));
 
   const gameState$ = new BehaviorSubject(_state)
     .scan((acc, val) => ((_state = { ...acc, ...val }), _state))
@@ -162,10 +161,7 @@ export function initialize(node) {
   // keypress$ and clicks$ make up our flux-flow/event bus
   Observable.merge(keypress$, clicks$)
     .mergeMap(action => actionHandlers(action, _state))
-    .subscribe(state => {
-      console.log("state", state);
-      gameState$.next(state);
-    });
+    .subscribe(state => gameState$.next(state));
 
   return gameState$;
 }

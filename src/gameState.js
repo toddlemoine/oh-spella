@@ -98,7 +98,10 @@ function nextWord(state) {
 }
 
 function handleNextWord(_, state) {
-  return Observable.of(nextWord(resetState(state)));
+  const nextState = nextWord(resetState(state));
+  return Observable.of(say(`Next word: Spell: ${nextState.currentWord}`)).mapTo(
+    nextState
+  );
 }
 
 function currentStat(stats) {
@@ -132,11 +135,16 @@ function createStats(word) {
   };
 }
 
+function initialAnnouncement(_, state) {
+  return Observable.of(say(`Ready? Spell: ${state.currentWord}`)).mapTo(state);
+}
+
 const actionHandlers = combineHandlers(
   ["letter", validateUserWord],
   ["letter", validateComplete],
   ["next-word", handleNextWord],
-  ["repeat", repeatWord]
+  ["repeat", repeatWord],
+  ["initial-announcement", initialAnnouncement]
 );
 
 export function initialize(node) {
@@ -147,6 +155,8 @@ export function initialize(node) {
   const gameState$ = new BehaviorSubject(_state)
     .scan((acc, val) => ((_state = { ...acc, ...val }), _state))
     .do(state => console.log("state", state));
+
+  const initialAnnouncement$ = Observable.of(action("initial-announcement"));
 
   const spaceBarPress$ = Observable.fromEvent(document, "keypress")
     .filter(e => _state.complete && e.which === 32)
@@ -163,7 +173,7 @@ export function initialize(node) {
     .map(e => action(e.target.id));
 
   // keypress$ and clicks$ make up our flux-flow/event bus
-  Observable.merge(keypress$, spaceBarPress$, clicks$)
+  Observable.merge(initialAnnouncement$, keypress$, spaceBarPress$, clicks$)
     .mergeMap(action => actionHandlers(action, _state))
     .subscribe(state => gameState$.next(state));
 

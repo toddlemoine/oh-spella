@@ -148,8 +148,12 @@ export function initialize(node) {
     .scan((acc, val) => ((_state = { ...acc, ...val }), _state))
     .do(state => console.log("state", state));
 
+  const spaceBarPress$ = Observable.fromEvent(document, "keypress")
+    .filter(e => _state.complete && e.which === 32)
+    .map(() => action("next-word"));
+
   const keypress$ = Observable.fromEvent(document, "keypress")
-    .filter(isValidKeyEvent)
+    .filter(e => !_state.complete && isValidKeyEvent(e))
     .do(e => console.log("pressed", e.key))
     .pluck("key")
     .map(text => action("letter", { text }));
@@ -159,7 +163,7 @@ export function initialize(node) {
     .map(e => action(e.target.id));
 
   // keypress$ and clicks$ make up our flux-flow/event bus
-  Observable.merge(keypress$, clicks$)
+  Observable.merge(keypress$, spaceBarPress$, clicks$)
     .mergeMap(action => actionHandlers(action, _state))
     .subscribe(state => gameState$.next(state));
 

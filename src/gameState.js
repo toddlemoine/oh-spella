@@ -125,13 +125,20 @@ function updateCompleteStats(complete, state) {
   }
 }
 
+function updateSkipStats(state) {
+  const stat = currentStat(state.stats);
+  stat.end = Date.now();
+  stat.skipped = true;
+}
+
 function createStats(word) {
   return {
     word,
     history: [],
     correctHistory: [],
     start: Date.now(),
-    end: null
+    end: null,
+    skipped: false
   };
 }
 
@@ -139,12 +146,18 @@ function initialAnnouncement(_, state) {
   return Observable.of(say(`Ready? Spell: ${state.currentWord}`)).mapTo(state);
 }
 
+function skipWord(_, state) {
+  updateSkipStats(state);
+  return handleNextWord(_, state);
+}
+
 const actionHandlers = combineHandlers(
   ["letter", validateUserWord],
   ["letter", validateComplete],
   ["next-word", handleNextWord],
   ["repeat", repeatWord],
-  ["initial-announcement", initialAnnouncement]
+  ["initial-announcement", initialAnnouncement],
+  ["skip", skipWord]
 );
 
 export function initialize(node) {

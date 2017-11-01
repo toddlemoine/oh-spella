@@ -11,7 +11,12 @@ function Home({ userWord = "", currentWord = "", complete }) {
       <NextWordOverlay show={complete} />
       <Word value={currentWord} letters={userWord} />
       (Current word is {currentWord})
-      <button id="repeat">Say Word</button>
+      <button id="repeat" disabled={complete}>
+        Say Word
+      </button>
+      <button id="skip" disabled={complete}>
+        Skip
+      </button>
     </div>
   );
 }

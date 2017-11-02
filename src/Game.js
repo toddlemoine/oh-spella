@@ -3,7 +3,13 @@ import Word from "./Word";
 import NextWordOverlay from "./NextWordOverlay";
 import "./Game.css";
 
-function Home({ userWord = "", currentWord = "", complete }) {
+function Home({
+  userWord = "",
+  currentWord = "",
+  complete,
+  stats = [],
+  wordList = []
+}) {
   const classes = ["game"];
 
   return (

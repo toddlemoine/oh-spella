@@ -1,7 +1,8 @@
 import { Observable, Subject, BehaviorSubject } from "rxjs/Rx";
 import { say } from "./letters/speech";
+import localforage from "localforage";
 
-const initialWordList = "big list web grip ball small".split(" ");
+const initialWordList = "big list small".split(" ");
 
 const initialState = {
   wordList: initialWordList,
@@ -63,6 +64,7 @@ function validateUserWord({ text }, state) {
 }
 
 function validateComplete({ text }, state) {
+  console.log("validateComplete");
   const complete = state.userWord + text === state.currentWord;
   if (complete) say("complete");
   updateCompleteStats(complete, state);
@@ -82,7 +84,7 @@ function combineHandlers(...handlers) {
 
 function repeatWord(action, state) {
   say(state.currentWord);
-  return state;
+  return Observable.of(state);
 }
 
 function resetState(state) {
@@ -151,6 +153,22 @@ function skipWord(_, state) {
   return handleNextWord(_, state);
 }
 
+function saveStats(state) {
+  return localforage.setItem(state.id, state.stats);
+}
+
+function roundIsFinished(state) {
+  const { stats, wordList } = state;
+  const last = stats[stats.length - 1];
+  return (
+    state.complete && stats.length === wordList.length && last.end !== null
+  );
+}
+
+function routeToStats(id) {
+  console.log("routing to /stats/", id);
+}
+
 const actionHandlers = combineHandlers(
   ["letter", validateUserWord],
   ["letter", validateComplete],
@@ -185,10 +203,17 @@ export function initialize(node) {
     .filter(e => /button/gi.test(e.target.nodeName))
     .map(e => action(e.target.id));
 
-  // keypress$ and clicks$ make up our flux-flow/event bus
   Observable.merge(initialAnnouncement$, keypress$, spaceBarPress$, clicks$)
     .mergeMap(action => actionHandlers(action, _state))
     .subscribe(state => gameState$.next(state));
+
+  gameState$.subscribe(state => {
+    console.log("finished?");
+    if (roundIsFinished(state)) {
+      console.log("finished.");
+      saveStats(state).then(() => routeToStats(state.id));
+    }
+  });
 
   return gameState$;
 }

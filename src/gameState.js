@@ -1,35 +1,27 @@
 import { Observable, Subject, BehaviorSubject } from "rxjs/Rx";
 import { say } from "./letters/speech";
 import localforage from "localforage";
+import shuffle from "./util/shuffle";
+import combineHandlers from "./util/combineHandlers";
+import {
+  currentStat,
+  updateLetterStats,
+  updateCompleteStats,
+  updateCorrectnessStats,
+  updateSkipStats,
+  createStats
+} from "./stats/index";
 
 const initialWordList = "big list small".split(" ");
 
 const initialState = {
+  id: "foo",
   wordList: initialWordList,
   currentWord: "",
   userWord: "",
   complete: false,
   stats: []
 };
-
-function shuffle(array) {
-  var m = array.length,
-    t,
-    i;
-
-  // While there remain elements to shuffle…
-  while (m) {
-    // Pick a remaining element…
-    i = Math.floor(Math.random() * m--);
-
-    // And swap it with the current element.
-    t = array[m];
-    array[m] = array[i];
-    array[i] = t;
-  }
-
-  return array;
-}
 
 function shuffleWordList(state) {
   state.wordList = shuffle(state.wordList);
@@ -43,7 +35,6 @@ function isValidKeyEvent(e) {
 }
 
 function validGuess(guess, word) {
-  console.log("isValid", word.startsWith(guess));
   const isValid = word.startsWith(guess);
   return isValid;
 }
@@ -59,27 +50,14 @@ function validateUserWord({ text }, state) {
   updateCorrectnessStats(isValid, state);
   return Observable.of(say(text))
     .filter(text => isValid)
-    .do(() => console.log(attempt, "is valid"))
     .mapTo({ userWord: attempt });
 }
 
 function validateComplete({ text }, state) {
-  console.log("validateComplete");
   const complete = state.userWord + text === state.currentWord;
   if (complete) say("complete");
   updateCompleteStats(complete, state);
   return Observable.of({ complete });
-}
-
-function combineHandlers(...handlers) {
-  return function(action, state) {
-    console.log("action:", action.type);
-    return Observable.from(
-      handlers
-        .filter(([type, _]) => type === action.type)
-        .map(([type, fn]) => fn(action, state))
-    ).mergeAll();
-  };
 }
 
 function repeatWord(action, state) {
@@ -106,44 +84,6 @@ function handleNextWord(_, state) {
   );
 }
 
-function currentStat(stats) {
-  return stats[stats.length - 1];
-}
-
-function updateLetterStats(letter, state) {
-  const stat = currentStat(state.stats);
-  stat.history.push(letter);
-}
-
-function updateCorrectnessStats(correct, state) {
-  const stat = currentStat(state.stats);
-  stat.correctHistory.push(correct);
-}
-
-function updateCompleteStats(complete, state) {
-  const stat = currentStat(state.stats);
-  if (complete) {
-    stat.end = Date.now();
-  }
-}
-
-function updateSkipStats(state) {
-  const stat = currentStat(state.stats);
-  stat.end = Date.now();
-  stat.skipped = true;
-}
-
-function createStats(word) {
-  return {
-    word,
-    history: [],
-    correctHistory: [],
-    start: Date.now(),
-    end: null,
-    skipped: false
-  };
-}
-
 function initialAnnouncement(_, state) {
   return Observable.of(say(`Ready? Spell: ${state.currentWord}`)).mapTo(state);
 }
@@ -160,9 +100,10 @@ function saveStats(state) {
 function roundIsFinished(state) {
   const { stats, wordList } = state;
   const last = stats[stats.length - 1];
-  return (
-    state.complete && stats.length === wordList.length && last.end !== null
-  );
+  const isFinished =
+    state.complete && stats.length === wordList.length && last.end !== null;
+  console.log("roundIsFinished", isFinished);
+  return isFinished;
 }
 
 function routeToStats(id) {
@@ -185,6 +126,7 @@ export function initialize(node) {
 
   const gameState$ = new BehaviorSubject(_state)
     .scan((acc, val) => ((_state = { ...acc, ...val }), _state))
+    .takeWhile(state => !roundIsFinished(state))
     .do(state => console.log("state", state));
 
   const initialAnnouncement$ = Observable.of(action("initial-announcement"));
@@ -207,11 +149,12 @@ export function initialize(node) {
     .mergeMap(action => actionHandlers(action, _state))
     .subscribe(state => gameState$.next(state));
 
-  gameState$.subscribe(state => {
-    console.log("finished?");
-    if (roundIsFinished(state)) {
-      console.log("finished.");
-      saveStats(state).then(() => routeToStats(state.id));
+  const noop = () => null;
+  gameState$.subscribe({
+    next: noop,
+    error: noop,
+    complete: () => {
+      saveStats(_state).then(() => routeToStats(_state.id));
     }
   });
 

@@ -120,8 +120,6 @@ const actionHandlers = combineHandlers(
 );
 
 export function initialize(node) {
-  console.log("initialize");
-
   let _state = nextWord(shuffleWordList(resetState({ ...initialState })));
 
   const gameState$ = new BehaviorSubject(_state)
@@ -137,7 +135,6 @@ export function initialize(node) {
 
   const keypress$ = Observable.fromEvent(document, "keypress")
     .filter(e => !_state.complete && isValidKeyEvent(e))
-    .do(e => console.log("pressed", e.key))
     .pluck("key")
     .map(text => action("letter", { text }));
 

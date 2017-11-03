@@ -13,6 +13,14 @@ function Stats({ stats = [], hidden }) {
       return acc + val;
     }, 0);
 
+  const totalMistakes = stats.reduce((acc, curr) => {
+    const numberIncorrect = curr.correctHistory.filter(x => x === false).length;
+    acc += numberIncorrect;
+    return acc;
+  }, 0);
+
+  const mistakesPerWord = totalMistakes / numberOfWords;
+
   const totalScore = "???";
 
   return (
@@ -22,9 +30,13 @@ function Stats({ stats = [], hidden }) {
         <li>Number of words: {numberOfWords}</li>
         <li>Words spelled correctly: {numberCorrect}</li>
         <li>Words skipped: {numberSkipped}</li>
+        <li>Mistakes per word {mistakesPerWord}</li>
         <li>Avg time per word {averageTimePerWord}</li>
         <li>Total Score: {totalScore}</li>
       </ul>
+      <button id="new-game" onClick={() => (window.location.href = "/")}>
+        Play New Game
+      </button>
     </div>
   );
 }

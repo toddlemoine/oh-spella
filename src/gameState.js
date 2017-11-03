@@ -3,6 +3,7 @@ import { say } from "./letters/speech";
 import localforage from "localforage";
 import shuffle from "./util/shuffle";
 import combineHandlers from "./util/combineHandlers";
+import uniqueId from "./util/uniqueId";
 import {
   currentStat,
   updateLetterStats,
@@ -12,10 +13,10 @@ import {
   createStats
 } from "./stats/index";
 
-const initialWordList = "big list small".split(" ");
+const initialWordList = "big list small party birthday".split(" ");
 
 const initialState = {
-  id: "foo",
+  id: null,
   wordList: initialWordList,
   currentWord: "",
   userWord: "",
@@ -66,7 +67,7 @@ function repeatWord(action, state) {
 }
 
 function resetState(state) {
-  return { ...state, userWord: "", complete: false };
+  return { ...state, id: uniqueId(), userWord: "", complete: false };
 }
 
 function nextWord(state) {
@@ -108,6 +109,7 @@ function roundIsFinished(state) {
 
 function routeToStats(id) {
   console.log("routing to /stats/", id);
+  window.location.href = `/stats/${id}`;
 }
 
 const actionHandlers = combineHandlers(

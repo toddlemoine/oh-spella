@@ -18,7 +18,12 @@ class Word extends Component {
     const lastAttempt = stats.correctHistory[stats.correctHistory.length - 1];
     if (!stats.complete && lastAttempt === false) {
       const pos = letters.length;
-      this.letterInstances[pos].pop();
+      try {
+        const inst = this.letterInstances[pos];
+        inst.pop();
+      } catch (err) {
+        console.error("pop error", err);
+      }
     }
   }
 

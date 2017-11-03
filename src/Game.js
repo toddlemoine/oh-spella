@@ -11,11 +11,12 @@ function Home({
   wordList = []
 }) {
   const classes = ["game"];
+  const currentStats = stats[stats.length - 1];
 
   return (
     <div className={classes.join(" ")}>
       <NextWordOverlay show={complete} />
-      <Word value={currentWord} letters={userWord} />
+      <Word stats={currentStats} value={currentWord} letters={userWord} />
       (Current word is {currentWord})
       <button id="repeat" disabled={complete}>
         Say Word

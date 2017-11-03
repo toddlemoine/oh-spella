@@ -13,6 +13,15 @@ class Word extends Component {
     this.letterInstances.push(letterInstance);
   }
 
+  componentDidUpdate() {
+    const { stats, letters } = this.props;
+    const lastAttempt = stats.correctHistory[stats.correctHistory.length - 1];
+    if (!stats.complete && lastAttempt === false) {
+      const pos = letters.length;
+      this.letterInstances[pos].pop();
+    }
+  }
+
   render() {
     const { value = "", letters = "" } = this.props;
     return (

@@ -9,11 +9,10 @@ class Letter extends Component {
   saveRef(node) {
     this.node = node;
   }
-  pulse() {
-    console.log("pulsing", this.props.value, this.props.index);
-    const PULSE = "pulse";
-    this.node.classList.add(PULSE);
-    setTimeout(() => this.node.classList.remove(PULSE), 250);
+  pop() {
+    const CSS_CLASS = "pop";
+    this.node.classList.add(CSS_CLASS);
+    setTimeout(() => this.node.classList.remove(CSS_CLASS), 250);
   }
   render() {
     const { value } = this.props;

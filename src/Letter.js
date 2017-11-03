@@ -16,8 +16,12 @@ class Letter extends Component {
   }
   render() {
     const { value } = this.props;
+    const classes = ["letter"];
+    if (value) {
+      classes.push("complete");
+    }
     return (
-      <div className="letter" ref={this.saveRef}>
+      <div className={classes.join(" ")} ref={this.saveRef}>
         {value}
       </div>
     );

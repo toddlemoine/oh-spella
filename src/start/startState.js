@@ -6,7 +6,7 @@ const initialState = {
 };
 
 function fetchCannedLists() {
-  return fetch("/words.json");
+  return fetch("/words.json").then(resp => resp.json());
 }
 
 const actionHandlers = combineHandlers([]);
@@ -20,9 +20,7 @@ export function initialize(node) {
     // .takeWhile(state => !roundIsFinished(state))
     .do(state => console.log("state", state));
 
-  fetchCannedLists()
-    .then(response => response.json())
-    .then(cannedLists => state$.next({ cannedLists }));
+  fetchCannedLists().then(cannedLists => state$.next({ cannedLists }));
 
   //   Observable.merge(fetchCannedLsts)
   //     .mergeMap(action => actionHandlers(action, _state))

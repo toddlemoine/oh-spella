@@ -2,6 +2,7 @@ import React from "react";
 import pathToRegExp from "path-to-regexp";
 import GameContainer from "./GameContainer";
 import StatsContainer from "./StatsContainer";
+import StartScreen from "./start/StartScreen";
 
 function addPathRegExp(routeObj) {
   const keys = [];
@@ -29,7 +30,7 @@ function addPathRegExp(routeObj) {
 const routes = [
   {
     path: "/",
-    action: () => <GameContainer />
+    action: () => <StartScreen />
   },
   {
     path: "/stats/:id+",

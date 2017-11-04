@@ -1,8 +1,5 @@
 import { Observable, BehaviorSubject } from "rxjs/Rx";
 import combineHandlers from "../util/combineHandlers";
-import { sessionStore } from "../storage";
-
-sessionStore.setData("foo", "123");
 
 const initialState = {
   cannedLists: [["foo", "bar"]]

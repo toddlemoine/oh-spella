@@ -1,7 +1,7 @@
 import React from "react";
 import pathToRegExp from "path-to-regexp";
-import GameContainer from "./GameContainer";
-import StatsContainer from "./StatsContainer";
+import GameContainer from "./game/GameContainer";
+import StatsContainer from "./stats/StatsContainer";
 import StartScreen from "./start/StartScreen";
 
 function addPathRegExp(routeObj) {

@@ -6,6 +6,5 @@ const drivers = [
   localforage.LOCALSTORAGE
 ];
 
-localforage.setDriver(drivers);
-
-export default localforage;
+// export const sessionStore = localforage
+export default localforage.setDriver(drivers);

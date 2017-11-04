@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import StatsOverlay from "./StatsOverlay";
-import localforage from "./storage";
+import localforage from "../storage";
 
 class StatsContainer extends Component {
   constructor(...args) {

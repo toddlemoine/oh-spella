@@ -1,16 +1,16 @@
 import { Observable, BehaviorSubject } from "rxjs/Rx";
-import { say } from "./letters/speech";
 import localforage from "localforage";
-import shuffle from "./util/shuffle";
-import combineHandlers from "./util/combineHandlers";
-import uniqueId from "./util/uniqueId";
+import { say } from "../speech";
+import shuffle from "../util/shuffle";
+import combineHandlers from "../util/combineHandlers";
+import uniqueId from "../util/uniqueId";
 import {
   updateLetterStats,
   updateCompleteStats,
   updateCorrectnessStats,
   updateSkipStats,
   createStats
-} from "./stats/index";
+} from "./stats";
 
 const initialState = {
   id: null,

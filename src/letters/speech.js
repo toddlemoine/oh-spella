@@ -1,14 +1,13 @@
-function _speak(text) {
-  return new Promise(resolve => {
-    const msg = new SpeechSynthesisUtterance();
-    msg.text = text;
-    msg.onend = () => {
-      resolve(text);
-    };
-    window.speechSynthesis.speak(msg);
-  });
-}
-
 export const say = text => {
-  return _speak(text);
+  return new Promise(resolve => {
+    const synth = window.speechSynthesis;
+    const msg = new SpeechSynthesisUtterance(text);
+    synth.speak(msg);
+    const id = setInterval(() => {
+      if (!synth.speaking) {
+        clearInterval(id);
+        resolve(text);
+      }
+    }, 250);
+  });
 };

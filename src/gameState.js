@@ -1,11 +1,10 @@
-import { Observable, Subject, BehaviorSubject } from "rxjs/Rx";
+import { Observable, BehaviorSubject } from "rxjs/Rx";
 import { say } from "./letters/speech";
 import localforage from "localforage";
 import shuffle from "./util/shuffle";
 import combineHandlers from "./util/combineHandlers";
 import uniqueId from "./util/uniqueId";
 import {
-  currentStat,
   updateLetterStats,
   updateCompleteStats,
   updateCorrectnessStats,
@@ -44,20 +43,32 @@ function action(type, attrs) {
   return { type, ...attrs };
 }
 
+function getCompletePhrase() {
+  const phrases = `That's great!;Well done!;Keep going!;Excellent!`.split(";");
+  const randomNumber = Math.floor(Math.random() * (phrases.length - 1));
+  return phrases[randomNumber];
+}
+
 function validateUserWord({ text }, state) {
   const attempt = state.userWord + text;
   const isValid = validGuess(attempt, state.currentWord);
   updateLetterStats(text, state);
   updateCorrectnessStats(isValid, state);
-  return Observable.of(say(text))
+  return Observable.of(text)
     .filter(text => isValid)
+    .do(() => say(text))
     .mapTo({ userWord: attempt });
 }
 
 function validateComplete({ text }, state) {
   const complete = state.userWord + text === state.currentWord;
-  if (complete) say("complete");
   updateCompleteStats(complete, state);
+  if (complete) {
+    // return Observable.defer(() => say("complete")).mapTo({ complete });
+    return Observable.of(complete)
+      .do(() => say(getCompletePhrase()))
+      .mapTo({ complete });
+  }
   return Observable.of({ complete });
 }
 
@@ -101,6 +112,7 @@ function saveStats(state) {
 function roundIsFinished(state) {
   const { stats, wordList } = state;
   const last = stats[stats.length - 1];
+  // @TODO: Account for skipped words
   const isFinished =
     state.complete && stats.length === wordList.length && last.end !== null;
   console.log("roundIsFinished", isFinished);

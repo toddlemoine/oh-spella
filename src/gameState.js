@@ -12,19 +12,17 @@ import {
   createStats
 } from "./stats/index";
 
-const initialWordList = "big list small party birthday".split(" ");
-
 const initialState = {
   id: null,
-  wordList: initialWordList,
+  wordList: [],
   currentWord: "",
   userWord: "",
   complete: false,
   stats: []
 };
 
-function shuffleWordList(state) {
-  state.wordList = shuffle(state.wordList);
+function shuffleWordList(state, wordList) {
+  state.wordList = shuffle(wordList);
   return state;
 }
 
@@ -64,7 +62,6 @@ function validateComplete({ text }, state) {
   const complete = state.userWord + text === state.currentWord;
   updateCompleteStats(complete, state);
   if (complete) {
-    // return Observable.defer(() => say("complete")).mapTo({ complete });
     return Observable.of(complete)
       .do(() => say(getCompletePhrase()))
       .mapTo({ complete });
@@ -100,9 +97,15 @@ function initialAnnouncement(_, state) {
   return Observable.of(say(`Ready? Spell: ${state.currentWord}`)).mapTo(state);
 }
 
+function usedAllWords({ stats, wordList }) {
+  return stats.length === wordList.length;
+}
+
 function skipWord(_, state) {
   updateSkipStats(state);
-  return handleNextWord(_, state);
+  return usedAllWords(state)
+    ? Observable.of({ complete: true })
+    : handleNextWord(_, state);
 }
 
 function saveStats(state) {
@@ -112,9 +115,7 @@ function saveStats(state) {
 function roundIsFinished(state) {
   const { stats, wordList } = state;
   const last = stats[stats.length - 1];
-  // @TODO: Account for skipped words
-  const isFinished =
-    state.complete && stats.length === wordList.length && last.end !== null;
+  const isFinished = state.complete && usedAllWords(state) && last.end !== null;
   console.log("roundIsFinished", isFinished);
   return isFinished;
 }
@@ -133,15 +134,15 @@ const actionHandlers = combineHandlers(
   ["skip", skipWord]
 );
 
-export function initialize(node) {
-  let _state = nextWord(shuffleWordList(resetState({ ...initialState })));
+export function initialize(node, wordList) {
+  let _state = nextWord(
+    shuffleWordList(resetState({ ...initialState }), wordList)
+  );
 
   const gameState$ = new BehaviorSubject(_state)
     .scan((acc, val) => ((_state = { ...acc, ...val }), _state))
     .takeWhile(state => !roundIsFinished(state))
     .do(state => console.log("state", state));
-
-  const initialAnnouncement$ = Observable.of(action("initial-announcement"));
 
   const spaceBarPress$ = Observable.fromEvent(document, "keypress")
     .filter(e => _state.complete && e.which === 32)
@@ -156,7 +157,8 @@ export function initialize(node) {
     .filter(e => /button/gi.test(e.target.nodeName))
     .map(e => action(e.target.id));
 
-  Observable.merge(initialAnnouncement$, keypress$, spaceBarPress$, clicks$)
+  Observable.merge(keypress$, spaceBarPress$, clicks$)
+    .startWith(action("initial-announcement"))
     .mergeMap(action => actionHandlers(action, _state))
     .subscribe(state => gameState$.next(state));
 

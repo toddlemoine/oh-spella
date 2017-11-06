@@ -8,8 +8,12 @@ class CannedLists extends Component {
   render() {
     const { items = [] } = this.props;
     return (
-      <ul className="canned-lists">
-        {items.map((item, index) => <li key={index}>{item.text}</li>)}
+      <ul id="canned-lists" className="canned-lists">
+        {items.map((wordSet, index) => (
+          <li key={index} data-id={wordSet[0]}>
+            {wordSet[1].join(", ")}
+          </li>
+        ))}
       </ul>
     );
   }

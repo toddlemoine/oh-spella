@@ -1,10 +1,10 @@
 import localforage from "localforage";
 
-const drivers = [
+localforage.setDriver([
   localforage.INDEXEDDB,
   localforage.WEBSQL,
   localforage.LOCALSTORAGE
-];
+]);
 
-// export const sessionStore = localforage
-export default localforage.setDriver(drivers);
+const store = localforage.createInstance({ name: "oh-spella" });
+export default store;

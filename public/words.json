@@ -1,1 +1,4 @@
-[["chair", "hair", "fruit"], ["apple", "log", "hog"]]
+{
+  "_p1": ["chair", "hair", "fruit"],
+  "_p2": ["apple", "log", "hog"]
+}

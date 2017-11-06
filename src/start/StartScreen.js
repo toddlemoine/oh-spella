@@ -10,7 +10,7 @@ class StartScreen extends Component {
     super();
     this.state = {};
   }
-  componentWillMount() {
+  componentDidMount() {
     // @TODO: Replace with ref
     const node = ReactDOM.findDOMNode(this);
     this.unsubscribe = initialize(node).subscribe(state =>

@@ -1,9 +1,9 @@
 import { Observable, BehaviorSubject } from "rxjs/Rx";
-import localforage from "localforage";
 import { say } from "../speech";
 import shuffle from "../util/shuffle";
 import combineHandlers from "../util/combineHandlers";
 import uniqueId from "../util/uniqueId";
+import storage from "../storage";
 import {
   updateLetterStats,
   updateCompleteStats,
@@ -11,6 +11,8 @@ import {
   updateSkipStats,
   createStats
 } from "./stats";
+
+const noop = () => null;
 
 const initialState = {
   id: null,
@@ -109,7 +111,7 @@ function skipWord(_, state) {
 }
 
 function saveStats(state) {
-  return localforage.setItem(state.id, state.stats);
+  return storage.setItem(state.id, state.stats);
 }
 
 function roundIsFinished(state) {
@@ -125,7 +127,22 @@ function routeToStats(id) {
   window.location.href = `/stats/${id}`;
 }
 
+function initializeWords(action, state) {
+  const _state = nextWord(
+    resetState({
+      ...initialState,
+      wordList: shuffle(action.wordList)
+    })
+  );
+  return Observable.of(_state);
+}
+
+function loadWordList(id) {
+  return storage.getItem(id);
+}
+
 const actionHandlers = combineHandlers(
+  ["load-word-list-success", initializeWords],
   ["letter", validateUserWord],
   ["letter", validateComplete],
   ["next-word", handleNextWord],
@@ -134,15 +151,17 @@ const actionHandlers = combineHandlers(
   ["skip", skipWord]
 );
 
-export function initialize(node, wordList) {
-  let _state = nextWord(
-    shuffleWordList(resetState({ ...initialState }), wordList)
-  );
+export function initialize(node, wordListId) {
+  let _state = initialState;
 
   const gameState$ = new BehaviorSubject(_state)
     .scan((acc, val) => ((_state = { ...acc, ...val }), _state))
     .takeWhile(state => !roundIsFinished(state))
     .do(state => console.log("state", state));
+
+  const loadWords$ = loadWordList(wordListId).then(wordList =>
+    action("load-word-list-success", { wordList })
+  );
 
   const spaceBarPress$ = Observable.fromEvent(document, "keypress")
     .filter(e => _state.complete && e.which === 32)
@@ -157,12 +176,11 @@ export function initialize(node, wordList) {
     .filter(e => /button/gi.test(e.target.nodeName))
     .map(e => action(e.target.id));
 
-  Observable.merge(keypress$, spaceBarPress$, clicks$)
+  Observable.merge(loadWords$, keypress$, spaceBarPress$, clicks$)
     .startWith(action("initial-announcement"))
     .mergeMap(action => actionHandlers(action, _state))
     .subscribe(state => gameState$.next(state));
 
-  const noop = () => null;
   gameState$.subscribe({
     next: noop,
     error: noop,

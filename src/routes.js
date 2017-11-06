@@ -33,6 +33,10 @@ const routes = [
     action: () => <StartScreen />
   },
   {
+    path: "/game/:id",
+    action: params => <GameContainer wordSetId={params.id} />
+  },
+  {
     path: "/stats/:id+",
     action: params => {
       return <StatsContainer id={params.id} />;

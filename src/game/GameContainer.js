@@ -3,16 +3,15 @@ import ReactDOM from "react-dom";
 import Game from "./Game";
 import { initialize } from "./gameState";
 
-const words = "breath chair slack take".split(" ");
-
 class GameContainer extends React.Component {
   constructor() {
     super();
     this.state = {};
+    this.initialize = this.initialize.bind(this);
   }
-  componentDidMount() {
+  initialize() {
     const node = ReactDOM.findDOMNode(this);
-    this.$stream = initialize(node, words);
+    this.$stream = initialize(node, this.props.wordSetId);
     this.$stream.subscribe(
       state => this.setState(state),
       error => console.error(error)
@@ -22,7 +21,7 @@ class GameContainer extends React.Component {
     this.$stream.unsubscribe();
   }
   render() {
-    return <Game {...this.state} />;
+    return <Game ref={this.initialize} {...this.state} />;
   }
 }
 

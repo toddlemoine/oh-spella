@@ -15,6 +15,9 @@ class Word extends Component {
 
   componentDidUpdate() {
     const { stats, letters } = this.props;
+
+    if (!stats) return;
+
     const lastAttempt = stats.correctHistory[stats.correctHistory.length - 1];
     if (!stats.complete && lastAttempt === false) {
       const pos = letters.length;

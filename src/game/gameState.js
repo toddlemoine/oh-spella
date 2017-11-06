@@ -23,11 +23,6 @@ const initialState = {
   stats: []
 };
 
-function shuffleWordList(state, wordList) {
-  state.wordList = shuffle(wordList);
-  return state;
-}
-
 function isValidKeyEvent(e) {
   const A_CHARCODE = 97;
   const Z_CHARCODE = 122;
@@ -90,13 +85,11 @@ function nextWord(state) {
 
 function handleNextWord(_, state) {
   const nextState = nextWord(resetState(state));
-  return Observable.of(say(`Next word: Spell: ${nextState.currentWord}`)).mapTo(
-    nextState
-  );
+  return Observable.of(say(`Spell: ${nextState.currentWord}`)).mapTo(nextState);
 }
 
-function initialAnnouncement(_, state) {
-  return Observable.of(say(`Ready? Spell: ${state.currentWord}`)).mapTo(state);
+function initialAnnouncement(action, state) {
+  return Observable.of(say(`Get ready!`)).mapTo(state);
 }
 
 function usedAllWords({ stats, wordList }) {
@@ -118,23 +111,15 @@ function roundIsFinished(state) {
   const { stats, wordList } = state;
   const last = stats[stats.length - 1];
   const isFinished = state.complete && usedAllWords(state) && last.end !== null;
-  console.log("roundIsFinished", isFinished);
   return isFinished;
 }
 
 function routeToStats(id) {
-  console.log("routing to /stats/", id);
   window.location.href = `/stats/${id}`;
 }
 
 function initializeWords(action, state) {
-  const _state = nextWord(
-    resetState({
-      ...initialState,
-      wordList: shuffle(action.wordList)
-    })
-  );
-  return Observable.of(_state);
+  return handleNextWord(null, { ...state, wordList: shuffle(action.wordList) });
 }
 
 function loadWordList(id) {
@@ -143,11 +128,11 @@ function loadWordList(id) {
 
 const actionHandlers = combineHandlers(
   ["load-word-list-success", initializeWords],
+  ["initial-announcement", initialAnnouncement],
   ["letter", validateUserWord],
   ["letter", validateComplete],
   ["next-word", handleNextWord],
   ["repeat", repeatWord],
-  ["initial-announcement", initialAnnouncement],
   ["skip", skipWord]
 );
 

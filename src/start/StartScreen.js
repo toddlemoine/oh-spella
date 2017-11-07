@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import CannedLists from "./CannedLists";
 // import SavedLists from "./SavedLists";
-// import ListBuilder from "./ListBuilder";
+import ListBuilder from "./ListBuilder";
 import { initialize } from "./startState";
 
 class StartScreen extends Component {
@@ -26,6 +26,7 @@ class StartScreen extends Component {
       <div className="start-screen">
         <h1>Start</h1>
         <CannedLists items={cannedLists} />
+        <ListBuilder />
       </div>
     );
   }

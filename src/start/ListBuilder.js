@@ -12,14 +12,12 @@ class ListBuilder extends Component {
     console.log("initialzing");
     const node = this.node;
 
-    const formSubmit$ = Observable.fromEvent(node, "submit")
-      .do(() => console.log("cancel submit"))
-      .map(this.cancelSubmit);
+    const formSubmit$ = Observable.fromEvent(node, "submit").do(e =>
+      e.preventDefault()
+    );
 
     const addNewWord$ = Observable.fromEvent(node, "click")
       .filter(e => e.target.id === "list-builder-add-new-word")
-      .do(e => e.preventDefault())
-      .do(() => console.log("save current word"))
       .map(e => this.saveCurrentWord(e));
 
     const removeWord$ = Observable.fromEvent(node, "click")
@@ -27,17 +25,20 @@ class ListBuilder extends Component {
       .pluck("target", "dataset", "index")
       .map(index => this.removeWordAtIndex(index));
 
+    const save$ = Observable.fromEvent(
+      node.querySelector("#list-builder-save"),
+      "click"
+    ).map(() => this.saveList());
+
     this.unsubscribe = Observable.merge(
       formSubmit$,
       addNewWord$,
-      removeWord$
+      removeWord$,
+      save$
     ).subscribe();
   }
   componentWillUnmount() {
     this.unsubscribe();
-  }
-  cancelSubmit(e) {
-    e.preventDefault();
   }
   removeWordAtIndex(index) {
     const items = this.state.items.splice(0);
@@ -54,6 +55,10 @@ class ListBuilder extends Component {
     this.setState({
       items: this.state.items.concat(word)
     });
+  }
+  saveList() {
+    const listName = this.node.querySelector("#list-builder-list-name").value;
+    this.props.onSave(listName, this.state.items);
   }
   render() {
     const { items = [] } = this.state;

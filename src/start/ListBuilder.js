@@ -22,13 +22,29 @@ class ListBuilder extends Component {
       .do(() => console.log("save current word"))
       .map(e => this.saveCurrentWord(e));
 
-    this.unsubscribe = Observable.merge(formSubmit$, addNewWord$).subscribe();
+    const removeWord$ = Observable.fromEvent(node, "click")
+      .filter(e => e.target.classList.contains("remove-new-word"))
+      .pluck("target", "dataset", "index")
+      .map(index => this.removeWordAtIndex(index));
+
+    this.unsubscribe = Observable.merge(
+      formSubmit$,
+      addNewWord$,
+      removeWord$
+    ).subscribe();
   }
   componentWillUnmount() {
     this.unsubscribe();
   }
   cancelSubmit(e) {
     e.preventDefault();
+  }
+  removeWordAtIndex(index) {
+    const items = this.state.items.splice(0);
+    items.splice(index, 1);
+    this.setState({
+      items
+    });
   }
   saveCurrentWord() {
     const input = this.node.querySelector("#new-word-input");
@@ -54,7 +70,9 @@ class ListBuilder extends Component {
           {items.map((item, key) => (
             <li key={key}>
               <span className="new-word">{item}</span>
-              <button className="remove-new-word">X</button>
+              <button className="remove-new-word" data-index={key}>
+                X
+              </button>
             </li>
           ))}
         </ul>

@@ -6,12 +6,24 @@ import ListBuilder from "./ListBuilder";
 import { initialize } from "./startState";
 
 class StartScreen extends Component {
+  render() {
+    const { cannedLists, savedLists, onSave } = this.props;
+    return (
+      <div className="start-screen">
+        <h1>Start</h1>
+        <CannedLists items={cannedLists} />
+        <ListBuilder onSave={onSave} />
+      </div>
+    );
+  }
+}
+
+class StartScreenContainer extends Component {
   constructor() {
     super();
     this.state = {};
   }
   componentDidMount() {
-    // @TODO: Replace with ref
     const node = ReactDOM.findDOMNode(this);
     this.unsubscribe = initialize(node).subscribe(state =>
       this.setState(state)
@@ -21,15 +33,8 @@ class StartScreen extends Component {
     this.unsubscribe();
   }
   render() {
-    const { cannedLists } = this.state;
-    return (
-      <div className="start-screen">
-        <h1>Start</h1>
-        <CannedLists items={cannedLists} />
-        <ListBuilder />
-      </div>
-    );
+    return <StartScreen {...this.state} />;
   }
 }
 
-export default StartScreen;
+export default StartScreenContainer;

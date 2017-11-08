@@ -9,7 +9,7 @@ class ListBuilder extends Component {
     };
   }
   componentDidMount() {
-    console.log("initialzing");
+    console.log("initialzing list builder");
     const node = this.node;
 
     const formSubmit$ = Observable.fromEvent(node, "submit").do(e =>
@@ -28,7 +28,10 @@ class ListBuilder extends Component {
     const save$ = Observable.fromEvent(
       node.querySelector("#list-builder-save"),
       "click"
-    ).map(() => this.saveList());
+    )
+      .map(() => this.saveList())
+      .do(() => this.setState({ items: [] }))
+      .do(() => this.getNewWordInput().focus());
 
     this.unsubscribe = Observable.merge(
       formSubmit$,
@@ -47,8 +50,11 @@ class ListBuilder extends Component {
       items
     });
   }
+  getNewWordInput() {
+    return this.node.querySelector("#new-word-input");
+  }
   saveCurrentWord() {
-    const input = this.node.querySelector("#new-word-input");
+    const input = this.getNewWordInput();
     const word = input.value;
     input.value = "";
     input.focus();

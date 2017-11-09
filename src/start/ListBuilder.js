@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Observable } from "rxjs/Rx";
+import { Observable, BehaviorSubject } from "rxjs/Rx";
 
 class ListBuilder extends Component {
   constructor() {
@@ -12,33 +12,42 @@ class ListBuilder extends Component {
     console.log("initialzing list builder");
     const node = this.node;
 
+    const state$ = new BehaviorSubject({ items: [] })
+      .scan((acc, curr = {}) => ({ acc, ...curr }))
+      .do(state => console.log("list builder state", state));
+
     const formSubmit$ = Observable.fromEvent(node, "submit").do(e =>
       e.preventDefault()
     );
 
     const addNewWord$ = Observable.fromEvent(node, "click")
       .filter(e => e.target.id === "list-builder-add-new-word")
-      .map(e => this.saveCurrentWord(e));
+      .map(e => ({ items: this.saveCurrentWord() }));
+    // .do(() => this.resetNewWord());
 
     const removeWord$ = Observable.fromEvent(node, "click")
       .filter(e => e.target.classList.contains("remove-new-word"))
       .pluck("target", "dataset", "index")
-      .map(index => this.removeWordAtIndex(index));
+      .map(index => ({
+        items: this.removeWordAtIndex(index)
+      }));
 
     const save$ = Observable.fromEvent(
       node.querySelector("#list-builder-save"),
       "click"
     )
       .map(() => this.saveList())
-      .do(() => this.setState({ items: [] }))
-      .do(() => this.getNewWordInput().focus());
+      .do(() => this.getNewWordInput().focus())
+      .mapTo({ items: [] });
 
     this.unsubscribe = Observable.merge(
       formSubmit$,
       addNewWord$,
       removeWord$,
       save$
-    ).subscribe();
+    ).subscribe(state => state$.next(state));
+
+    state$.subscribe(state => this.setState(state));
   }
   componentWillUnmount() {
     this.unsubscribe();
@@ -46,35 +55,32 @@ class ListBuilder extends Component {
   removeWordAtIndex(index) {
     const items = this.state.items.splice(0);
     items.splice(index, 1);
-    this.setState({
-      items
-    });
+    return items;
   }
   getNewWordInput() {
     return this.node.querySelector("#new-word-input");
   }
-  saveCurrentWord() {
+  resetNewWord() {
     const input = this.getNewWordInput();
-    const word = input.value;
     input.value = "";
     input.focus();
-    this.setState({
-      items: this.state.items.concat(word)
-    });
+  }
+  saveCurrentWord() {
+    const input = this.getNewWordInput();
+    return this.state.items.concat(input.value);
   }
   saveList() {
     const listName = this.node.querySelector("#list-builder-list-name").value;
     this.props.onSave(listName, this.state.items);
   }
   render() {
-    const { items = [] } = this.state;
+    const { items } = this.state;
     return (
       <form ref={node => (this.node = node)} className="list-builder">
-        <input type="hidden" value={items.join("\t")} />
         <h1>Create new list</h1>
         <div className="field">
           <label htmlFor="new-word-input">Add your word</label>
-          <input ref={this.setAddNewWordRef} type="text" id="new-word-input" />
+          <input type="text" id="new-word-input" />
           <button id="list-builder-add-new-word">+</button>
         </div>
         <ul>

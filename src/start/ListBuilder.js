@@ -4,17 +4,17 @@ import { Observable, BehaviorSubject } from "rxjs/Rx";
 class ListBuilder extends Component {
   constructor() {
     super();
-    this.state = {
-      items: []
-    };
+    this.state = {};
   }
+
   componentDidMount() {
     console.log("initialzing list builder");
     const node = this.node;
 
     const state$ = new BehaviorSubject({ items: [] })
       .scan((acc, curr = {}) => ({ acc, ...curr }))
-      .do(state => console.log("list builder state", state));
+      .do(state => console.log("list builder state", state))
+      .subscribe(state => this.setState(state));
 
     const formSubmit$ = Observable.fromEvent(node, "submit").do(e =>
       e.preventDefault()
@@ -22,8 +22,8 @@ class ListBuilder extends Component {
 
     const addNewWord$ = Observable.fromEvent(node, "click")
       .filter(e => e.target.id === "list-builder-add-new-word")
-      .map(e => ({ items: this.saveCurrentWord() }));
-    // .do(() => this.resetNewWord());
+      .map(e => ({ items: this.saveCurrentWord() }))
+      .do(() => this.resetNewWord());
 
     const removeWord$ = Observable.fromEvent(node, "click")
       .filter(e => e.target.classList.contains("remove-new-word"))
@@ -37,8 +37,8 @@ class ListBuilder extends Component {
       "click"
     )
       .map(() => this.saveList())
-      .do(() => this.getNewWordInput().focus())
-      .mapTo({ items: [] });
+      .mapTo({ items: [] })
+      .do(() => this.getNewWordInput().focus());
 
     this.unsubscribe = Observable.merge(
       formSubmit$,
@@ -46,12 +46,12 @@ class ListBuilder extends Component {
       removeWord$,
       save$
     ).subscribe(state => state$.next(state));
-
-    state$.subscribe(state => this.setState(state));
   }
+
   componentWillUnmount() {
     this.unsubscribe();
   }
+
   removeWordAtIndex(index) {
     const items = this.state.items.splice(0);
     items.splice(index, 1);
@@ -74,7 +74,7 @@ class ListBuilder extends Component {
     this.props.onSave(listName, this.state.items);
   }
   render() {
-    const { items } = this.state;
+    const { items = [] } = this.state;
     return (
       <form ref={node => (this.node = node)} className="list-builder">
         <h1>Create new list</h1>

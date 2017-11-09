@@ -32,6 +32,7 @@ function handleCannedListClick(e) {
 
 async function saveList(key, list) {
   console.log("saving", key, list);
+  if (!key) return;
   const lists = (await storage.getItem("savedLists")) || {};
   lists[key || uniqueId()] = list;
   return storage.setItem("savedLists", lists);
@@ -47,7 +48,8 @@ function clickOriginatesFromCannedList(e) {
 
 export function initialize(node) {
   const saveList$ = new BehaviorSubject()
-    .switchMap(([key, list] = []) => saveList(key, list))
+    .filter(keyListPair => Boolean(keyListPair))
+    .switchMap(([key, list]) => saveList(key, list))
     .map(savedLists => ({ savedLists }));
 
   let _state = {

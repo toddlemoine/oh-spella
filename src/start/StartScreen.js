@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import CannedLists from "./CannedLists";
 import SavedLists from "./SavedLists";
 import ListBuilder from "./ListBuilder";
+import SimpleListBuilder from "./SimpleListBuilder";
 import { initialize } from "./startState";
 
 class StartScreen extends Component {
@@ -13,7 +14,7 @@ class StartScreen extends Component {
         <h1>Start</h1>
         <CannedLists items={cannedLists} />
         <SavedLists items={savedLists} />
-        <ListBuilder onSave={onSave} />
+        <SimpleListBuilder onSave={onSave} />
       </div>
     );
   }

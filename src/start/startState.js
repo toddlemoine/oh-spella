@@ -35,10 +35,9 @@ function fetchSavedLists() {
 
 async function saveList(key, list) {
   const lists = (await storage.getItem(SAVED_LIST_KEY)) || {};
-  lists[key || uniqueId()] = list;
-  return storage
-    .setItem(SAVED_LIST_KEY, lists)
-    .then(lists => Object.entries(lists));
+  const listId = key || uniqueId();
+  lists[listId] = list;
+  return storage.setItem(SAVED_LIST_KEY, lists).then(() => listId);
 }
 
 async function removeItemFromList(listKey, id) {
@@ -55,7 +54,7 @@ export function initialize(node) {
   const saveList$ = new BehaviorSubject()
     .filter(keyListPair => Boolean(keyListPair))
     .switchMap(([key, list]) => saveList(key, list))
-    .map(savedLists => ({ savedLists }));
+    .do(listId => (window.location.href = `/game/saved:${listId}`));
 
   let _state = {
     ...initialState,
@@ -91,11 +90,9 @@ export function initialize(node) {
     state$.next({ cannedLists, savedLists });
   });
 
-  Observable.merge(
-    saveList$,
-    removeCannedItem$,
-    removeSavedItem$
-  ).subscribe(state => state$.next(state));
+  Observable.merge(removeCannedItem$, removeSavedItem$).subscribe(state =>
+    state$.next(state)
+  );
 
   return state$;
 }

@@ -68,12 +68,20 @@ export function initialize(node) {
     (acc, val) => ((_state = { ...acc, ...val }), _state)
   );
 
+  const removeCannedItem$ = Observable.fromEvent(
+    node.querySelector("#canned-lists"),
+    "click"
+  )
+    .filter(e => e.target.dataset.action === "remove")
+    .mergeMap(e => removeItemFromList(CANNED_LIST_KEY, e.target.dataset.id))
+    .map(cannedLists => ({ cannedLists }));
+
   const removeSavedItem$ = Observable.fromEvent(
     node.querySelector("#saved-lists"),
     "click"
   )
     .filter(e => e.target.dataset.action === "remove")
-    .mergeMap(e => removeItemFromList("saved", e.target.dataset.id))
+    .mergeMap(e => removeItemFromList(SAVED_LIST_KEY, e.target.dataset.id))
     .map(savedLists => ({ savedLists }));
 
   Promise.all([
@@ -83,9 +91,11 @@ export function initialize(node) {
     state$.next({ cannedLists, savedLists });
   });
 
-  Observable.merge(saveList$, removeSavedItem$).subscribe(state =>
-    state$.next(state)
-  );
+  Observable.merge(
+    saveList$,
+    removeCannedItem$,
+    removeSavedItem$
+  ).subscribe(state => state$.next(state));
 
   return state$;
 }

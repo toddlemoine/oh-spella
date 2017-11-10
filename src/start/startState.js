@@ -33,26 +33,12 @@ function fetchSavedLists() {
     .then(lists => Object.entries(lists || {}));
 }
 
-function handleListClick(namespace, id) {
-  window.location.href = `/game/${namespace}:${id}`;
-}
-
 async function saveList(key, list) {
   const lists = (await storage.getItem(SAVED_LIST_KEY)) || {};
   lists[key || uniqueId()] = list;
   return storage
     .setItem(SAVED_LIST_KEY, lists)
     .then(lists => Object.entries(lists));
-}
-
-function clickOriginatesFromCannedList(e) {
-  return (
-    e.target.parentNode.id === "canned-lists" && e.target.nodeName === "LI"
-  );
-}
-
-function clickOriginatesFromSavedList(e) {
-  return e.target.parentNode.id === "saved-lists" && e.target.nodeName === "LI";
 }
 
 export function initialize(node) {
@@ -72,16 +58,6 @@ export function initialize(node) {
     .scan((acc, val) => ((_state = { ...acc, ...val }), _state))
     .do(state => console.log("state", state));
 
-  const cannedListClicks$ = Observable.fromEvent(node, "click")
-    .filter(clickOriginatesFromCannedList)
-    .pluck("target", "dataset", "id")
-    .do(id => handleListClick(CANNED_LIST_KEY, id));
-
-  const savedListClicks$ = Observable.fromEvent(node, "click")
-    .filter(clickOriginatesFromSavedList)
-    .pluck("target", "dataset", "id")
-    .do(id => handleListClick(SAVED_LIST_KEY, id));
-
   Promise.all([
     fetchCannedLists(),
     fetchSavedLists()
@@ -89,11 +65,7 @@ export function initialize(node) {
     state$.next({ cannedLists, savedLists });
   });
 
-  Observable.merge(
-    cannedListClicks$,
-    savedListClicks$,
-    saveList$
-  ).subscribe(state => state$.next(state));
+  Observable.merge(saveList$).subscribe(state => state$.next(state));
 
   return state$;
 }

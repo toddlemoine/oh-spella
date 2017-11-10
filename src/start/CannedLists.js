@@ -9,9 +9,9 @@ class CannedLists extends Component {
     const { items = [] } = this.props;
     return (
       <ul id="canned-lists" className="canned-lists">
-        {items.map((wordSet, index) => (
-          <li key={index} data-id={wordSet[0]}>
-            {wordSet[1].join(", ")}
+        {items.map(([id, words], index) => (
+          <li key={index} data-id={id}>
+            <a href={`/game/canned:${id}`}> {words.join(", ")} </a>
           </li>
         ))}
       </ul>

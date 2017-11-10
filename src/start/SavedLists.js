@@ -7,7 +7,7 @@ class SavedLists extends Component {
       <ul id="saved-lists" className="saved-lists">
         {items.map(([id, words], index) => (
           <li key={index} data-id={id}>
-            {words.join(", ")}
+            <a href={`/game/saved:${id}`}>{words.join(", ")}</a>
           </li>
         ))}
       </ul>

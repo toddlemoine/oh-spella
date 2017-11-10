@@ -1,0 +1,9 @@
+.saved-lists li {
+  display: flex;
+  padding: 0.5rem;
+}
+
+.saved-lists [data-action="remove"] {
+  margin-left: 1rem;
+  border: none;
+}

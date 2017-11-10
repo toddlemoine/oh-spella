@@ -41,6 +41,16 @@ async function saveList(key, list) {
     .then(lists => Object.entries(lists));
 }
 
+async function removeItemFromList(listKey, id) {
+  return await storage
+    .getItem(listKey)
+    .then(lists => {
+      delete lists[id];
+      return storage.setItem(listKey, lists);
+    })
+    .then(lists => Object.entries(lists));
+}
+
 export function initialize(node) {
   const saveList$ = new BehaviorSubject()
     .filter(keyListPair => Boolean(keyListPair))
@@ -58,6 +68,17 @@ export function initialize(node) {
     .scan((acc, val) => ((_state = { ...acc, ...val }), _state))
     .do(state => console.log("state", state));
 
+  const removeSavedItem$ = Observable.fromEvent(
+    node.querySelector("#saved-lists"),
+    "click"
+  )
+    .filter(e => e.target.dataset.action === "remove")
+    .mergeMap(e => removeItemFromList("saved", e.target.dataset.id))
+    .do(saved => {
+      console.log("???", saved);
+    })
+    .map(savedLists => ({ savedLists }));
+
   Promise.all([
     fetchCannedLists(),
     fetchSavedLists()
@@ -65,7 +86,9 @@ export function initialize(node) {
     state$.next({ cannedLists, savedLists });
   });
 
-  Observable.merge(saveList$).subscribe(state => state$.next(state));
+  Observable.merge(saveList$, removeSavedItem$).subscribe(state =>
+    state$.next(state)
+  );
 
   return state$;
 }

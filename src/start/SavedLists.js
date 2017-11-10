@@ -1,4 +1,6 @@
 import React, { Component } from "react";
+import RemoveItemButton from "./RemoveItemButton";
+import "./SavedLists.css";
 
 class SavedLists extends Component {
   render() {
@@ -8,6 +10,7 @@ class SavedLists extends Component {
         {items.map(([id, words], index) => (
           <li key={index} data-id={id}>
             <a href={`/game/saved:${id}`}>{words.join(", ")}</a>
+            <RemoveItemButton itemId={id} />
           </li>
         ))}
       </ul>

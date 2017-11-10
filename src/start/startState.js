@@ -17,9 +17,14 @@ function getSavedListKey(key) {
 }
 
 function fetchCannedLists() {
-  return fetch("/words.json")
-    .then(resp => storage.setItem(CANNED_LIST_KEY, resp.json()))
-    .then(lists => Object.entries(lists));
+  return storage.getItem(CANNED_LIST_KEY).then(lists => {
+    if (!lists) {
+      return fetch("/words.json")
+        .then(resp => storage.setItem(CANNED_LIST_KEY, resp.json()))
+        .then(lists => Object.entries(lists));
+    }
+    return Object.entries(lists);
+  });
 }
 
 function fetchSavedLists() {

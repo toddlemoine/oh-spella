@@ -58,11 +58,6 @@ function validateUserWord({ text }, state) {
 function validateComplete({ text }, state) {
   const complete = state.userWord + text === state.currentWord;
   updateCompleteStats(complete, state);
-  if (complete) {
-    return Observable.of(complete)
-      .do(() => say(getCompletePhrase()))
-      .mapTo({ complete });
-  }
   return Observable.of({ complete });
 }
 

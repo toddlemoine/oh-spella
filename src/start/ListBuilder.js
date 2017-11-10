@@ -1,6 +1,12 @@
 import React, { Component } from "react";
 import { Observable, BehaviorSubject } from "rxjs/Rx";
 
+function isValidListNameChar(e) {
+  const A_CHARCODE = 97;
+  const Z_CHARCODE = 122;
+  return e.which >= A_CHARCODE && e.which <= Z_CHARCODE;
+}
+
 class ListBuilder extends Component {
   constructor() {
     super();
@@ -11,7 +17,7 @@ class ListBuilder extends Component {
     console.log("initialzing list builder");
     const node = this.node;
 
-    const state$ = new BehaviorSubject({ items: [] })
+    const state$ = new BehaviorSubject({ items: [], listName: "" })
       .scan((acc, curr = {}) => ({ acc, ...curr }))
       .do(state => console.log("list builder state", state))
       .subscribe(state => this.setState(state));
@@ -32,6 +38,14 @@ class ListBuilder extends Component {
         items: this.removeWordAtIndex(index)
       }));
 
+    const listNameKeypress$ = Observable.fromEvent(
+      node.querySelector("#list-builder-list-name"),
+      "keypress"
+    )
+      .filter(isValidListNameChar)
+      .pluck("target", "value")
+      .map(listName => ({ listName }));
+
     const save$ = Observable.fromEvent(
       node.querySelector("#list-builder-save"),
       "click"
@@ -44,6 +58,7 @@ class ListBuilder extends Component {
       formSubmit$,
       addNewWord$,
       removeWord$,
+      listNameKeypress$,
       save$
     ).subscribe(state => state$.next(state));
   }
@@ -74,7 +89,7 @@ class ListBuilder extends Component {
     this.props.onSave(listName, this.state.items);
   }
   render() {
-    const { items = [] } = this.state;
+    const { items = [], listName = "" } = this.state;
     return (
       <form ref={node => (this.node = node)} className="list-builder">
         <h1>Create new list</h1>
@@ -95,7 +110,7 @@ class ListBuilder extends Component {
         </ul>
         <div className="field">
           <label htmlFor="list-name">List name (optional)</label>
-          <input type="text" id="list-builder-list-name" />
+          <input type="text" id="list-builder-list-name" name="list-name" />
         </div>
         <div className="field">
           <button type="submit" id="list-builder-save">

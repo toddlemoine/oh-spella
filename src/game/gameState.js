@@ -122,8 +122,11 @@ function initializeWords(action, state) {
   return handleNextWord(null, { ...state, wordList: shuffle(action.wordList) });
 }
 
-function loadWordList(id) {
-  return storage.getItem(id);
+function loadWordList(listParam) {
+  const [namespace, listId] = listParam.split(":");
+  return storage.getItem(namespace).then(lists => {
+    return lists[listId];
+  });
 }
 
 const actionHandlers = combineHandlers(

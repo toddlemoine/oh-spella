@@ -4,46 +4,50 @@ import storage from "../storage";
 import uniqueId from "../util/uniqueId";
 
 const history = window.history;
+const SAVED_LIST_KEY = "saved";
+const CANNED_LIST_KEY = "canned";
 
 const initialState = {
-  cannedLists: []
+  cannedLists: [],
+  savedLists: []
 };
 
 function getSavedListKey(key) {
   return key || uniqueId();
 }
 
-function savedCannedLists(jsonLists) {
-  const lists = Object.entries(jsonLists);
-  return Promise.all(lists.map(([key, val]) => storage.setItem(key, val))).then(
-    () => lists
-  );
-}
-
 function fetchCannedLists() {
   return fetch("/words.json")
-    .then(resp => resp.json())
-    .then(savedCannedLists);
+    .then(resp => storage.setItem(CANNED_LIST_KEY, resp.json()))
+    .then(lists => Object.entries(lists));
 }
 
-function handleCannedListClick(e) {
-  window.location.href = `/game/${e.target.dataset.id}`;
+function fetchSavedLists() {
+  return storage
+    .getItem(SAVED_LIST_KEY)
+    .then(lists => Object.entries(lists || {}));
+}
+
+function handleListClick(namespace, id) {
+  window.location.href = `/game/${namespace}:${id}`;
 }
 
 async function saveList(key, list) {
-  console.log("saving", key, list);
-  if (!key) return;
-  const lists = (await storage.getItem("savedLists")) || {};
+  const lists = (await storage.getItem(SAVED_LIST_KEY)) || {};
   lists[key || uniqueId()] = list;
-  return storage.setItem("savedLists", lists);
+  return storage
+    .setItem(SAVED_LIST_KEY, lists)
+    .then(lists => Object.entries(lists));
 }
-
-// const actionHandlers = combineHandlers([]);
 
 function clickOriginatesFromCannedList(e) {
   return (
     e.target.parentNode.id === "canned-lists" && e.target.nodeName === "LI"
   );
+}
+
+function clickOriginatesFromSavedList(e) {
+  return e.target.parentNode.id === "saved-lists" && e.target.nodeName === "LI";
 }
 
 export function initialize(node) {
@@ -65,13 +69,26 @@ export function initialize(node) {
 
   const cannedListClicks$ = Observable.fromEvent(node, "click")
     .filter(clickOriginatesFromCannedList)
-    .do(handleCannedListClick);
+    .pluck("target", "dataset", "id")
+    .do(id => handleListClick(CANNED_LIST_KEY, id));
 
-  fetchCannedLists().then(cannedLists => state$.next({ cannedLists }));
+  const savedListClicks$ = Observable.fromEvent(node, "click")
+    .filter(clickOriginatesFromSavedList)
+    .pluck("target", "dataset", "id")
+    .do(id => handleListClick(SAVED_LIST_KEY, id));
 
-  Observable.merge(cannedListClicks$, saveList$).subscribe(state =>
-    state$.next(state)
-  );
+  Promise.all([
+    fetchCannedLists(),
+    fetchSavedLists()
+  ]).then(([cannedLists, savedLists]) => {
+    state$.next({ cannedLists, savedLists });
+  });
+
+  Observable.merge(
+    cannedListClicks$,
+    savedListClicks$,
+    saveList$
+  ).subscribe(state => state$.next(state));
 
   return state$;
 }

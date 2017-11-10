@@ -4,8 +4,12 @@ class SavedLists extends Component {
   render() {
     const { items = [] } = this.props;
     return (
-      <ul className="saved-lists">
-        {items.map((item, index) => <li key={index}>{item.text}</li>)}
+      <ul id="saved-lists" className="saved-lists">
+        {items.map(([id, words], index) => (
+          <li key={index} data-id={id}>
+            {words.join(", ")}
+          </li>
+        ))}
       </ul>
     );
   }

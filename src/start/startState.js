@@ -64,9 +64,9 @@ export function initialize(node) {
     }
   };
 
-  const state$ = new BehaviorSubject(_state)
-    .scan((acc, val) => ((_state = { ...acc, ...val }), _state))
-    .do(state => console.log("state", state));
+  const state$ = new BehaviorSubject(_state).scan(
+    (acc, val) => ((_state = { ...acc, ...val }), _state)
+  );
 
   const removeSavedItem$ = Observable.fromEvent(
     node.querySelector("#saved-lists"),
@@ -74,9 +74,6 @@ export function initialize(node) {
   )
     .filter(e => e.target.dataset.action === "remove")
     .mergeMap(e => removeItemFromList("saved", e.target.dataset.id))
-    .do(saved => {
-      console.log("???", saved);
-    })
     .map(savedLists => ({ savedLists }));
 
   Promise.all([

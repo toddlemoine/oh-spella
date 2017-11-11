@@ -1,13 +1,29 @@
 import React, { Component } from "react";
+import { Observable } from "rxjs/Observable";
 
-class SimpleListBuilder extends Component {
+function setupObservables(node) {
+  const input$ = Observable.fromEvent(
+    node.querySelector("textarea"),
+    "keypress"
+  )
+    .filter(e => {
+      return /[^A-Za-z'!]/.test(e.key);
+    })
+    .do(e => e.preventDefault())
+    .subscribe();
+}
+
+class SimpleListBuilderContainer extends Component {
+  componentDidMount() {
+    setupObservables(this.node);
+  }
   handleSubmit() {
     const list = this.listInput.value.split("\n").map(x => x.trim());
     this.props.onSave(null, list);
   }
   render() {
     return (
-      <section className="simple-list-builder">
+      <section ref={node => (this.node = node)} className="simple-list-builder">
         <p>Enter words, one per line.</p>
         <textarea
           id="simple-list-builder-words"
@@ -21,4 +37,4 @@ class SimpleListBuilder extends Component {
   }
 }
 
-export default SimpleListBuilder;
+export default SimpleListBuilderContainer;

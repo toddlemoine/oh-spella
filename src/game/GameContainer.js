@@ -12,10 +12,10 @@ class GameContainer extends React.Component {
   initialize() {
     const node = ReactDOM.findDOMNode(this);
     this.$stream = initialize(node, this.props.wordSetId);
-    this.$stream.subscribe(
-      state => this.setState(state),
-      error => console.error(error)
-    );
+    this.$stream.subscribe({
+      next: state => this.setState(state),
+      error: error => console.error(error)
+    });
   }
   componentWillUnmount() {
     this.$stream.unsubscribe();

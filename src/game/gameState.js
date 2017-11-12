@@ -79,6 +79,8 @@ function nextWord(state) {
 }
 
 function handleNextWord(_, state) {
+
+  console.log('handleNextWord')
   const nextState = nextWord(resetState(state));
   return Observable.of(say(`Spell: ${nextState.currentWord}`)).mapTo(nextState);
 }
@@ -114,6 +116,7 @@ function routeToStats(id) {
 }
 
 function initializeWords(action, state) {
+  console.log('initialize words')
   return handleNextWord(null, { ...state, wordList: shuffle(action.wordList) });
 }
 
@@ -135,42 +138,43 @@ const actionHandlers = combineHandlers(
 );
 
 export function initialize(node, wordListId) {
-  let _state = initialState;
 
-  const gameState$ = new BehaviorSubject(_state)
-    .scan((acc, val) => ((_state = { ...acc, ...val }), _state))
+  const gameState$ = new BehaviorSubject(initialState)
+    .scan((acc, val) => ({ ...acc, ...val }))
     .takeWhile(state => !roundIsFinished(state))
     .do(state => console.log("state", state));
 
-  const loadWords$ = loadWordList(wordListId).then(wordList =>
-    action("load-word-list-success", { wordList })
+  const loadWords$ = Observable.fromPromise(
+    loadWordList(wordListId).then(wordList => action("load-word-list-success", { wordList }))
   );
 
   const spaceBarPress$ = Observable.fromEvent(document, "keypress")
-    .filter(e => _state.complete && e.which === 32)
+    .withLatestFrom(gameState$)
+    .filter(([e, state]) => state.complete && e.which === 32)
     .map(() => action("next-word"));
 
   const keypress$ = Observable.fromEvent(document, "keypress")
-    .filter(e => !_state.complete && isValidKeyEvent(e))
-    .pluck("key")
-    .map(text => action("letter", { text }));
+    .withLatestFrom(gameState$)
+    .filter(([e, state]) => !state.complete && isValidKeyEvent(e))
+    .map(([e, state]) => action("letter", { text: e.key }));
 
   const clicks$ = Observable.fromEvent(node, "click")
     .filter(e => /button/gi.test(e.target.nodeName))
     .map(e => action(e.target.id));
 
-  Observable.merge(loadWords$, keypress$, spaceBarPress$, clicks$)
+  const mergedStreams = Observable.merge(loadWords$, keypress$, spaceBarPress$, clicks$)
     .startWith(action("initial-announcement"))
-    .mergeMap(action => actionHandlers(action, _state))
-    .subscribe(state => gameState$.next(state));
+    .withLatestFrom(gameState$)
+    .mergeMap(([action, state]) => actionHandlers(action, state))
+    .multicast(gameState$)
+    .refCount();
 
-  gameState$.subscribe({
-    next: noop,
-    error: noop,
-    complete: () => {
-      saveStats(_state).then(() => routeToStats(_state.id));
-    }
-  });
+  // mergedStreams.subscribe({
+  //   complete: (...args) => {
+  //     console.log('complete args', args)
+  //     // saveStats(state).then(() => routeToStats(state.id));
+  //   }
+  // });
 
-  return gameState$;
+  return mergedStreams;
 }

@@ -144,9 +144,8 @@ export function initialize(node, wordListId) {
     .takeWhile(state => !roundIsFinished(state))
     .do(state => console.log("state", state));
 
-  const loadWords$ = Observable.fromPromise(
-    loadWordList(wordListId).then(wordList => action("load-word-list-success", { wordList }))
-  );
+  const loadWords$ = Observable.fromPromise( loadWordList(wordListId))
+    .map(wordList => action("load-word-list-success", { wordList }));
 
   const spaceBarPress$ = Observable.fromEvent(document, "keypress")
     .withLatestFrom(gameState$)
@@ -160,7 +159,8 @@ export function initialize(node, wordListId) {
 
   const clicks$ = Observable.fromEvent(node, "click")
     .filter(e => /button/gi.test(e.target.nodeName))
-    .map(e => action(e.target.id));
+    .pluck("target", "id")
+    .map(action);
 
   const mergedStreams = Observable.merge(loadWords$, keypress$, spaceBarPress$, clicks$)
     .startWith(action("initial-announcement"))

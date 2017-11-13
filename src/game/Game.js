@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import Word from "./Word";
 import NextWordOverlay from "./NextWordOverlay";
+import StatsOverlay from "./StatsOverlay";
 import "./Game.css";
 
 class Game extends Component {
@@ -10,17 +11,17 @@ class Game extends Component {
       currentWord = "",
       complete,
       stats = [],
-      wordList = []
+      wordList = [],
+      finished
     } = this.props;
 
-    const classes = ["game"];
     const currentStats = stats[stats.length - 1];
 
     return (
-      <div className={classes.join(" ")}>
-        <NextWordOverlay show={complete} />
+      <div className="game">
+        {complete && <NextWordOverlay show={true} />}
+        {finished && <StatsOverlay stats={stats} />}
         <Word stats={currentStats} value={currentWord} letters={userWord} />
-        (Current word is {currentWord})
         <button id="repeat" disabled={complete}>
           Say Word
         </button>

@@ -1,7 +1,6 @@
 import React from "react";
 import pathToRegExp from "path-to-regexp";
 import GameContainer from "./game/GameContainer";
-import StatsContainer from "./stats/StatsContainer";
 import StartScreen from "./start/StartScreen";
 
 function addPathRegExp(routeObj) {
@@ -35,12 +34,6 @@ const routes = [
   {
     path: "/game/:id",
     action: params => <GameContainer wordSetId={params.id} />
-  },
-  {
-    path: "/stats/:id+",
-    action: params => {
-      return <StatsContainer id={params.id} />;
-    }
   }
 ].map(addPathRegExp);
 

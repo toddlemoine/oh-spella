@@ -12,14 +12,13 @@ import {
   createStats
 } from "./stats";
 
-const noop = () => null;
-
 const initialState = {
   id: null,
   wordList: [],
   currentWord: "",
   userWord: "",
   complete: false,
+  finished: false,
   stats: []
 };
 
@@ -47,12 +46,20 @@ function getCompletePhrase() {
 function validateUserWord({ text }, state) {
   const attempt = state.userWord + text;
   const isValid = validGuess(attempt, state.currentWord);
+  const userWord = isValid ? attempt : state.userWord;
   updateLetterStats(text, state);
   updateCorrectnessStats(isValid, state);
-  return Observable.of(text)
-    .filter(text => isValid)
-    .do(() => say(text))
-    .mapTo({ userWord: attempt });
+
+  const complete = attempt === state.currentWord;
+  updateCompleteStats(complete, state);
+
+  const response = Observable.of({ ...state, userWord, complete });
+
+  response.subscribe(state => {
+    if (isValid) say(text);
+  });
+
+  return response;
 }
 
 function validateComplete({ text }, state) {
@@ -79,10 +86,11 @@ function nextWord(state) {
 }
 
 function handleNextWord(_, state) {
-
-  console.log('handleNextWord')
+  console.log("handleNextWord");
   const nextState = nextWord(resetState(state));
-  return Observable.of(say(`Spell: ${nextState.currentWord}`)).mapTo(nextState);
+  const response = Observable.of(nextState);
+  response.subscribe(({ currentWord }) => say(`Spell: ${currentWord}`));
+  return response;
 }
 
 function initialAnnouncement(action, state) {
@@ -111,12 +119,7 @@ function roundIsFinished(state) {
   return isFinished;
 }
 
-function routeToStats(id) {
-  window.location.href = `/stats/${id}`;
-}
-
 function initializeWords(action, state) {
-  console.log('initialize words')
   return handleNextWord(null, { ...state, wordList: shuffle(action.wordList) });
 }
 
@@ -131,21 +134,24 @@ const actionHandlers = combineHandlers(
   ["load-word-list-success", initializeWords],
   ["initial-announcement", initialAnnouncement],
   ["letter", validateUserWord],
-  ["letter", validateComplete],
   ["next-word", handleNextWord],
   ["repeat", repeatWord],
   ["skip", skipWord]
 );
 
-export function initialize(node, wordListId) {
+function checkIfRoundIsFinished(state) {
+  state.finished = roundIsFinished(state);
+  return state;
+}
 
+export function initialize(node, wordListId) {
   const gameState$ = new BehaviorSubject(initialState)
     .scan((acc, val) => ({ ...acc, ...val }))
-    .takeWhile(state => !roundIsFinished(state))
     .do(state => console.log("state", state));
 
-  const loadWords$ = Observable.fromPromise( loadWordList(wordListId))
-    .map(wordList => action("load-word-list-success", { wordList }));
+  const loadWords$ = Observable.fromPromise(
+    loadWordList(wordListId)
+  ).map(wordList => action("load-word-list-success", { wordList }));
 
   const spaceBarPress$ = Observable.fromEvent(document, "keypress")
     .withLatestFrom(gameState$)
@@ -162,19 +168,28 @@ export function initialize(node, wordListId) {
     .pluck("target", "id")
     .map(action);
 
-  const mergedStreams = Observable.merge(loadWords$, keypress$, spaceBarPress$, clicks$)
+  const actionStream = Observable.merge(
+    loadWords$,
+    keypress$,
+    spaceBarPress$,
+    clicks$
+  )
     .startWith(action("initial-announcement"))
     .withLatestFrom(gameState$)
-    .mergeMap(([action, state]) => actionHandlers(action, state))
+    .concatMap(([action, state]) => actionHandlers(action, state))
+    .concatMap(state => {
+      console.log("complete check", state);
+      if (state.complete) {
+        console.log("is complete. delay?");
+        return handleNextWord(null, state).delay(3000);
+      } else {
+        return Observable.of(state);
+      }
+    })
+    .map(checkIfRoundIsFinished)
     .multicast(gameState$)
     .refCount();
 
-  // mergedStreams.subscribe({
-  //   complete: (...args) => {
-  //     console.log('complete args', args)
-  //     // saveStats(state).then(() => routeToStats(state.id));
-  //   }
-  // });
-
-  return mergedStreams;
+  actionStream.subscribe();
+  return gameState$;
 }

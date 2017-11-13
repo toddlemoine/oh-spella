@@ -32,6 +32,7 @@ class Word extends Component {
 
   render() {
     const { value = "", letters = "" } = this.props;
+
     return (
       <div className="word">
         {value

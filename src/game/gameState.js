@@ -130,66 +130,76 @@ function loadWordList(listParam) {
   });
 }
 
-const actionHandlers = combineHandlers(
-  ["load-word-list-success", initializeWords],
-  ["initial-announcement", initialAnnouncement],
-  ["letter", validateUserWord],
-  ["next-word", handleNextWord],
-  ["repeat", repeatWord],
-  ["skip", skipWord]
-);
-
 function checkIfRoundIsFinished(state) {
   state.finished = roundIsFinished(state);
   return state;
 }
 
 export function initialize(node, wordListId) {
-  const gameState$ = new BehaviorSubject(initialState)
-    .scan((acc, val) => ({ ...acc, ...val }))
-    .do(state => console.log("state", state));
+  // const gameState$ = new BehaviorSubject(initialState)
+  //   .scan((acc, val) => ({ ...acc, ...val }))
+  //   .do(state => console.log("state", state));
 
-  const loadWords$ = Observable.fromPromise(
-    loadWordList(wordListId)
-  ).map(wordList => action("load-word-list-success", { wordList }));
+  const loadWords$ = Observable.fromPromise(loadWordList(wordListId));
 
-  const spaceBarPress$ = Observable.fromEvent(document, "keypress")
-    .withLatestFrom(gameState$)
-    .filter(([e, state]) => state.complete && e.which === 32)
-    .map(() => action("next-word"));
+  // const clicks$ = Observable.fromEvent(node, "click")
+  //   .filter(e => /button/gi.test(e.target.nodeName))
+  //   .pluck("target", "id")
+  //   .map(action);
 
-  const keypress$ = Observable.fromEvent(document, "keypress")
-    .withLatestFrom(gameState$)
-    .filter(([e, state]) => !state.complete && isValidKeyEvent(e))
-    .map(([e, state]) => action("letter", { text: e.key }));
+  const startSpeech$ = Observable.fromPromise(say("Get ready!"));
 
-  const clicks$ = Observable.fromEvent(node, "click")
-    .filter(e => /button/gi.test(e.target.nodeName))
-    .pluck("target", "id")
-    .map(action);
+  function createWordStream() {
+    return Observable.fromEvent(document, "keypress")
+      .filter(isValidKeyEvent)
+      .pluck("key");
+  }
 
-  const actionStream = Observable.merge(
-    loadWords$,
-    keypress$,
-    spaceBarPress$,
-    clicks$
-  )
-    .startWith(action("initial-announcement"))
-    .withLatestFrom(gameState$)
-    .concatMap(([action, state]) => actionHandlers(action, state))
-    .concatMap(state => {
-      console.log("complete check", state);
-      if (state.complete) {
-        console.log("is complete. delay?");
-        return handleNextWord(null, state).delay(3000);
-      } else {
-        return Observable.of(state);
-      }
-    })
-    .map(checkIfRoundIsFinished)
-    .multicast(gameState$)
-    .refCount();
+  const stateStream$ = loadWords$
+    .map(wordList => ({ ...initialState, wordList, currentWord: wordList[0] }))
+    .filter(state => Boolean(state.wordList.length));
 
-  actionStream.subscribe();
-  return gameState$;
+  const wordStateStream = stateStream$
+    .distinct(state => state.currentWord)
+    .do(state => say(`Spell ${state.currentWord}`))
+    // .concatMap(state => {
+    .switchMap(state => {
+      const wordToSpell = state.currentWord;
+      const wordStream$ = createWordStream();
+
+      const attemptStream$ = wordStream$
+        .scan((userWord, key) => {
+          const attempt = userWord + key;
+          return wordToSpell.startsWith(attempt) ? attempt : userWord;
+        })
+        .do(x => console.log("attempt", x))
+        .takeWhile(userWord => userWord !== wordToSpell);
+
+      attemptStream$.subscribe({ complete: () => console.log("done!") });
+
+      const userWordStream$ = wordStream$
+        .scan((userWord, key) => {
+          const attempt = userWord + key;
+          return wordToSpell.startsWith(attempt) ? attempt : userWord;
+        })
+        .distinct()
+        .map(userWord => ({ userWord }));
+
+      userWordStream$.subscribe(({ userWord }) => say(userWord.substr(-1)));
+
+      const correctHistoryStream$ = wordStream$
+        .withLatestFrom(userWordStream$)
+        .map(([key, { userWord }]) => userWord.endsWith(key))
+        .scan(
+          (history, successOrFailure) => history.concat(successOrFailure),
+          []
+        )
+        .map(history => ({ history }));
+
+      return Observable.merge(userWordStream$, correctHistoryStream$);
+    });
+
+  return Observable.merge(stateStream$, wordStateStream)
+    .scan((acc, curr) => ({ ...acc, ...curr }))
+    .do(x => console.log("merged", x));
 }

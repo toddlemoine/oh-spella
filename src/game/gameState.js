@@ -136,10 +136,6 @@ function checkIfRoundIsFinished(state) {
 }
 
 export function initialize(node, wordListId) {
-  // const gameState$ = new BehaviorSubject(initialState)
-  //   .scan((acc, val) => ({ ...acc, ...val }))
-  //   .do(state => console.log("state", state));
-
   const loadWords$ = Observable.fromPromise(loadWordList(wordListId));
 
   // const clicks$ = Observable.fromEvent(node, "click")
@@ -155,19 +151,30 @@ export function initialize(node, wordListId) {
       .pluck("key");
   }
 
-  const stateStream$ = loadWords$
-    .map(wordList => ({ ...initialState, wordList, currentWord: wordList[0] }))
-    .filter(state => Boolean(state.wordList.length));
+  const gameState$ = new BehaviorSubject({});
 
-  const wordStateStream = stateStream$
+  const wordList$ = loadWords$;
+
+  const state$ = wordList$
+    .filter(wordList => Boolean(wordList.length))
+    .map(wordList => ({
+      ...initialState,
+      wordList,
+      currentWord: wordList[0]
+    }));
+
+  state$.subscribe(state => gameState$.next(state));
+
+  const wordStateStream = gameState$
+    .skip(1)
     .distinct(state => state.currentWord)
     .do(state => say(`Spell ${state.currentWord}`))
-    // .concatMap(state => {
-    .switchMap(state => {
+    .concatMap(state => {
+      // .switchMap(state => {
       const wordToSpell = state.currentWord;
-      const wordStream$ = createWordStream();
+      const word$ = createWordStream();
 
-      const attemptStream$ = wordStream$
+      const attempt$ = word$
         .scan((userWord, key) => {
           const attempt = userWord + key;
           return wordToSpell.startsWith(attempt) ? attempt : userWord;
@@ -175,9 +182,12 @@ export function initialize(node, wordListId) {
         .do(x => console.log("attempt", x))
         .takeWhile(userWord => userWord !== wordToSpell);
 
-      attemptStream$.subscribe({ complete: () => console.log("done!") });
+      attempt$.subscribe({
+        complete: () => console.log("done!")
+      });
 
-      const userWordStream$ = wordStream$
+      // userWord state
+      const userWord$ = word$
         .scan((userWord, key) => {
           const attempt = userWord + key;
           return wordToSpell.startsWith(attempt) ? attempt : userWord;
@@ -185,10 +195,18 @@ export function initialize(node, wordListId) {
         .distinct()
         .map(userWord => ({ userWord }));
 
-      userWordStream$.subscribe(({ userWord }) => say(userWord.substr(-1)));
+      // Complete state
+      const complete$ = userWord$
+        .pluck("userWord")
+        .filter(userWord => userWord === wordToSpell)
+        .switchMap(() => {
+          return Observable.of({ complete: true }).delay(3000);
+        });
 
-      const correctHistoryStream$ = wordStream$
-        .withLatestFrom(userWordStream$)
+      userWord$.subscribe(({ userWord }) => say(userWord.substr(-1)));
+
+      const correctHistory$ = word$
+        .withLatestFrom(userWord$)
         .map(([key, { userWord }]) => userWord.endsWith(key))
         .scan(
           (history, successOrFailure) => history.concat(successOrFailure),
@@ -196,10 +214,10 @@ export function initialize(node, wordListId) {
         )
         .map(history => ({ history }));
 
-      return Observable.merge(userWordStream$, correctHistoryStream$);
+      return Observable.merge(userWord$, correctHistory$, complete$);
     });
 
-  return Observable.merge(stateStream$, wordStateStream)
+  return Observable.merge(state$, wordStateStream)
     .scan((acc, curr) => ({ ...acc, ...curr }))
     .do(x => console.log("merged", x));
 }

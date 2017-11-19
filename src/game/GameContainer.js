@@ -1,28 +1,18 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import { connect } from "react-redux";
+import { letterPress } from "../actions";
 import Game from "./Game";
-import { initialize } from "./gameState";
 
-class GameContainer extends React.Component {
-  constructor() {
-    super();
-    this.state = {};
-    this.initialize = this.initialize.bind(this);
-  }
-  initialize() {
-    const node = ReactDOM.findDOMNode(this);
-    this.$stream = initialize(node, this.props.wordSetId);
-    this.$stream.subscribe({
-      next: state => this.setState(state),
-      error: error => console.error(error)
-    });
-  }
-  componentWillUnmount() {
-    this.$stream.unsubscribe();
-  }
-  render() {
-    return <Game ref={this.initialize} {...this.state} />;
-  }
+function mapStateToProps(state) {
+  return state;
 }
 
-export default GameContainer;
+function mapDispatchToProps(dispatch) {
+  return {
+    onKeyPress: e => {
+      dispatch(letterPress(e.key));
+    }
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Game);

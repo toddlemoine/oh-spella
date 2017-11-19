@@ -1,19 +1,26 @@
 import "rxjs";
 import React from "react";
 import ReactDOM from "react-dom";
+import { Provider } from "react-redux";
 // service worker
-import registerServiceWorker from "./registerServiceWorker";
+// import registerServiceWorker from "./registerServiceWorker";
 // routing
 import history from "./history";
 import routes from "./routes";
 import router from "./router";
 // our app components
+import store from "./stores";
 import App from "./App";
 import Error from "./Error";
 import "./index.css";
 
 function renderApp(component) {
-  ReactDOM.render(<App>{component}</App>, document.getElementById("root"));
+  ReactDOM.render(
+    <Provider store={store}>
+      <App>{component}</App>
+    </Provider>,
+    document.getElementById("root")
+  );
 }
 
 function handleRoute(location) {
@@ -23,6 +30,6 @@ function handleRoute(location) {
     .catch(error => renderApp(<Error message={error.message} />));
 }
 
-registerServiceWorker();
+// registerServiceWorker();
 handleRoute(history.location);
 history.listen(handleRoute);

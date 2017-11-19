@@ -5,6 +5,12 @@ import StatsOverlay from "./StatsOverlay";
 import "./Game.css";
 
 class Game extends Component {
+  componentDidMount() {
+    document.addEventListener("keypress", this.props.onKeyPress);
+  }
+  componentWillUnmount() {
+    document.removeEventListener("keypress", this.props.onKeyPress);
+  }
   render() {
     const {
       userWord = "",

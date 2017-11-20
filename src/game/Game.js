@@ -16,6 +16,13 @@ class Game extends Component {
   componentWillUnmount() {
     document.removeEventListener("keypress", this.handleKeyPress);
   }
+  componentDidUpdate() {
+    const { userWord, currentWord, words } = this.props;
+    if (userWord === currentWord) {
+      console.log(currentWord, "spelled correctly. Requesting next word.");
+      setTimeout(() => this.props.nextWord(words), 2000);
+    }
+  }
   handleKeyPress(e) {
     const { currentWord, userWord } = this.props;
     this.props.onKeyPress(e.key, currentWord, userWord);

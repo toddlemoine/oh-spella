@@ -10,6 +10,6 @@ export function letterPress(key, currentWord, userWord) {
   return { type: LETTERPRESS, key, currentWord, userWord };
 }
 
-export function nextWord() {
-  return { type: NEXT_WORD };
+export function nextWord(words) {
+  return { type: NEXT_WORD, words };
 }

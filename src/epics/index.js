@@ -25,7 +25,6 @@ export function initialize(action$) {
 
 export function letterPress(action$) {
   return action$
-    .do(x => console.log("epic..."))
     .ofType("LETTERPRESS")
     .filter(({ key }) => isValidKey(key))
     .map(({ key, currentWord, userWord }) => {
@@ -39,4 +38,21 @@ export function letterPress(action$) {
       }
       return { type: "LETTERPRESS_COMPLETE", _state: newState };
     });
+}
+
+export function nextWord(action$) {
+  return action$.ofType("NEXT_WORD").map(({ words }) => {
+    const _state = {};
+
+    if (words.length) {
+      _state.currentWord = words.pop();
+      _state.words = words;
+      _state.userWord = "";
+      _state.complete = false;
+    } else {
+      _state.finished = true;
+    }
+
+    return { type: "NEXT_WORD_COMPLETE", _state };
+  });
 }

@@ -1,16 +1,19 @@
 import React from "react";
 import { connect } from "react-redux";
-import { letterPress } from "../actions";
+import { initialize, letterPress } from "../actions";
 import Game from "./Game";
 
 function mapStateToProps(state) {
   return state;
 }
 
-function mapDispatchToProps(dispatch) {
+function mapDispatchToProps(dispatch, ownProps) {
   return {
-    onKeyPress: e => {
-      dispatch(letterPress(e.key));
+    initialize: () => {
+      dispatch(initialize(ownProps.wordSetId));
+    },
+    onKeyPress: (key, currentWord, userWord) => {
+      dispatch(letterPress(key, currentWord, userWord));
     }
   };
 }

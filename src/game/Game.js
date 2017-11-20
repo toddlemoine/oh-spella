@@ -5,11 +5,20 @@ import StatsOverlay from "./StatsOverlay";
 import "./Game.css";
 
 class Game extends Component {
+  constructor() {
+    super();
+    this.handleKeyPress = this.handleKeyPress.bind(this);
+  }
   componentDidMount() {
-    document.addEventListener("keypress", this.props.onKeyPress);
+    document.addEventListener("keypress", this.handleKeyPress);
+    this.props.initialize();
   }
   componentWillUnmount() {
-    document.removeEventListener("keypress", this.props.onKeyPress);
+    document.removeEventListener("keypress", this.handleKeyPress);
+  }
+  handleKeyPress(e) {
+    const { currentWord, userWord } = this.props;
+    this.props.onKeyPress(e.key, currentWord, userWord);
   }
   render() {
     const {

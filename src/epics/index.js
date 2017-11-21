@@ -18,8 +18,20 @@ export function initialize(action$) {
     .pluck("wordSetId")
     .switchMap(id => Observable.fromPromise(loadWords(id)))
     .map(words => {
-      const currentWord = words.pop();
-      return { type: "INITIALIZE_COMPLETE", words, currentWord };
+      const state = {
+        currentWord: words.pop(),
+        words
+      };
+
+      const wordStats = {
+        word: state.currentWord,
+        start: Date.now(),
+        end: null,
+        misses: 0,
+        skipped: false
+      };
+
+      return { type: "INITIALIZE_COMPLETE", state, wordStats };
     });
 }
 
@@ -28,31 +40,35 @@ export function letterPress(action$) {
     .ofType("LETTERPRESS")
     .filter(({ key }) => isValidKey(key))
     .map(({ key, currentWord, userWord }) => {
-      const newState = {};
+      const state = {};
+      const wordStats = { misses: 0 };
       const attempt = userWord + key;
       if (currentWord.startsWith(attempt)) {
-        newState.userWord = attempt;
+        state.userWord = attempt;
+      } else {
+        wordStats.misses++;
       }
       if (attempt === currentWord) {
-        newState.complete = true;
+        state.complete = true;
+        wordStats.end = Date.now();
       }
-      return { type: "LETTERPRESS_COMPLETE", _state: newState };
+      return { type: "LETTERPRESS_COMPLETE", state, wordStats };
     });
 }
 
 export function nextWord(action$) {
   return action$.ofType("NEXT_WORD").map(({ words }) => {
-    const _state = {};
+    const state = {};
 
     if (words.length) {
-      _state.currentWord = words.pop();
-      _state.words = words;
-      _state.userWord = "";
-      _state.complete = false;
+      state.currentWord = words.pop();
+      state.words = words;
+      state.userWord = "";
+      state.complete = false;
     } else {
-      _state.finished = true;
+      state.finished = true;
     }
 
-    return { type: "NEXT_WORD_COMPLETE", _state };
+    return { type: "NEXT_WORD_COMPLETE", state };
   });
 }

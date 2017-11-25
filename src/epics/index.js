@@ -1,5 +1,12 @@
 import { Observable } from "rxjs/Rx";
 import storage from "../storage";
+import { say as promiseSay } from "../speech";
+
+function say(text) {
+  return Observable.fromPromise(promiseSay(text)).do(x =>
+    console.log("observable say", x)
+  );
+}
 
 function isValidKey(key) {
   return /\w/gi.test(key);
@@ -16,6 +23,9 @@ export function initialize(action$) {
   return action$
     .ofType("INITIALIZE")
     .pluck("wordSetId")
+    .switchMap(wordSetId => {
+      return say("Let's begin").mapTo(wordSetId);
+    })
     .switchMap(id => Observable.fromPromise(loadWords(id)))
     .map(words => {
       const state = {
@@ -39,6 +49,7 @@ export function letterPress(action$) {
   return action$
     .ofType("LETTERPRESS")
     .filter(({ key }) => isValidKey(key))
+    .do(({ key }) => say(key))
     .map(({ key, currentWord, userWord }) => {
       const wordStats = { misses: 0 };
       const attempt = userWord + key;

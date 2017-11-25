@@ -3,9 +3,7 @@ import storage from "../storage";
 import { say as promiseSay } from "../speech";
 
 function say(text) {
-  return Observable.fromPromise(promiseSay(text)).do(x =>
-    console.log("observable say", x)
-  );
+  return Observable.fromPromise(promiseSay(text));
 }
 
 function isValidKey(key) {
@@ -23,9 +21,6 @@ export function initialize(action$) {
   return action$
     .ofType("INITIALIZE")
     .pluck("wordSetId")
-    .switchMap(wordSetId => {
-      return say("Let's begin").mapTo(wordSetId);
-    })
     .switchMap(id => Observable.fromPromise(loadWords(id)))
     .map(words => {
       const state = {
@@ -42,7 +37,8 @@ export function initialize(action$) {
       };
 
       return { type: "INITIALIZE_COMPLETE", state, wordStats };
-    });
+    })
+    .do(({ state }) => say(`Let's begin. Spell ${state.currentWord}.`));
 }
 
 export function letterPress(action$) {
@@ -87,6 +83,10 @@ export function nextWord(action$) {
       wordStats.end = Date.now();
     }
 
+    if (state.currentWord) {
+      say(`Spell: ${state.currentWord}.`);
+    }
+
     return { type: "NEXT_WORD_COMPLETE", state, wordStats };
   });
 }
@@ -112,8 +112,6 @@ export function skipWord(action$) {
 export function announce(action$) {
   return action$
     .ofType("ANNOUNCE")
-    .switchMap(({ text }) => {
-      return say(text);
-    })
+    .switchMap(({ text }) => say(text))
     .mapTo({ type: "ANNOUNCE_COMPLETE" });
 }

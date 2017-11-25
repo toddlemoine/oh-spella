@@ -2,6 +2,8 @@ const LETTERPRESS = "LETTERPRESS";
 const INITIALIZE = "INITIALIZE";
 const NEXT_WORD = "NEXT_WORD";
 const SKIP_WORD = "SKIP_WORD";
+const REPEAT_WORD = "REPEAT_WORD";
+const ANNOUNCE = "ANNOUNCE";
 
 export function initialize(wordSetId) {
   return { type: INITIALIZE, wordSetId };
@@ -20,5 +22,9 @@ export function skipWord(words) {
 }
 
 export function announce(text) {
-  return { type: "ANNOUNCE", text };
+  return { type: ANNOUNCE, text };
+}
+
+export function repeatWord(word) {
+  return { type: REPEAT_WORD, word };
 }

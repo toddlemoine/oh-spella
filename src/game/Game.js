@@ -30,15 +30,14 @@ class Game extends Component {
       this.word.popLastLetter();
     }
     if (userWord === currentWord) {
-      announce("Great job!");
       nextWord(words);
     }
   }
   componentWillUpdate(nextProps) {
     const { announce, currentWord } = this.props;
-    if (!nextProps.finished && nextProps.currentWord !== currentWord) {
-      announce(`Spell: ${nextProps.currentWord}`);
-    }
+    // if (!nextProps.finished && nextProps.currentWord !== currentWord) {
+    //   announce(`Spell: ${nextProps.currentWord}`);
+    // }
   }
   handleKeyPress(e) {
     const { currentWord, userWord } = this.props;

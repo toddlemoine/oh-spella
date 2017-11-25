@@ -1,6 +1,7 @@
 const INITIALIZE_COMPLETE = "INITIALIZE_COMPLETE";
 const LETTERPRESS_COMPLETE = "LETTERPRESS_COMPLETE";
 const NEXT_WORD_COMPLETE = "NEXT_WORD_COMPLETE";
+const SKIP_WORD_COMPLETE = "SKIP_WORD_COMPLETE";
 
 const initialState = {
   words: [],
@@ -8,7 +9,8 @@ const initialState = {
   userWord: "",
   complete: false,
   stats: [],
-  wordStats: {}
+  wordStats: {},
+  correct: []
 };
 
 function updateStats(state, newWordStats) {
@@ -40,6 +42,7 @@ export default function(state = initialState, action) {
     case INITIALIZE_COMPLETE:
     case NEXT_WORD_COMPLETE:
     case LETTERPRESS_COMPLETE:
+    case SKIP_WORD_COMPLETE:
       const _state = { ...state, ...action.state };
       return updateStats(_state, action.wordStats);
 

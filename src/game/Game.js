@@ -8,6 +8,7 @@ class Game extends Component {
   constructor() {
     super();
     this.handleKeyPress = this.handleKeyPress.bind(this);
+    this.handleSkip = this.handleSkip.bind(this);
   }
   componentDidMount() {
     document.addEventListener("keypress", this.handleKeyPress);
@@ -17,7 +18,10 @@ class Game extends Component {
     document.removeEventListener("keypress", this.handleKeyPress);
   }
   componentDidUpdate() {
-    const { userWord, currentWord, words } = this.props;
+    const { userWord, currentWord, words, correct } = this.props;
+    if (!correct) {
+      this.word.popLastLetter();
+    }
     if (userWord === currentWord) {
       console.log(currentWord, "spelled correctly. Requesting next word.");
       setTimeout(() => this.props.nextWord(words), 2000);
@@ -27,13 +31,17 @@ class Game extends Component {
     const { currentWord, userWord } = this.props;
     this.props.onKeyPress(e.key, currentWord, userWord);
   }
+  handleSkip() {
+    this.props.onSkip(this.props.words);
+  }
   render() {
     const {
       userWord = "",
       currentWord = "",
       complete,
       stats = [],
-      wordList = [],
+      words = [],
+      lastLetterCorrect,
       finished
     } = this.props;
 
@@ -41,13 +49,17 @@ class Game extends Component {
 
     return (
       <div className="game">
-        {complete && <NextWordOverlay show={true} />}
         {finished && <StatsOverlay stats={stats} />}
-        <Word stats={currentStats} value={currentWord} letters={userWord} />
+        <Word
+          ref={inst => (this.word = inst)}
+          lastLetterCorrect={lastLetterCorrect}
+          value={currentWord}
+          letters={userWord}
+        />
         <button id="repeat" disabled={complete}>
           Say Word
         </button>
-        <button id="skip" disabled={complete}>
+        <button onClick={this.handleSkip} disabled={complete}>
           Skip
         </button>
       </div>

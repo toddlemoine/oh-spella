@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { initialize, letterPress, nextWord } from "../actions";
+import { initialize, letterPress, nextWord, skipWord } from "../actions";
 import Game from "./Game";
 
 function mapStateToProps(state) {
@@ -17,6 +17,9 @@ function mapDispatchToProps(dispatch, ownProps) {
     },
     onKeyPress: (key, currentWord, userWord) => {
       dispatch(letterPress(key, currentWord, userWord));
+    },
+    onSkip: words => {
+      dispatch(skipWord(words));
     }
   };
 }

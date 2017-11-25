@@ -40,14 +40,19 @@ export function letterPress(action$) {
     .ofType("LETTERPRESS")
     .filter(({ key }) => isValidKey(key))
     .map(({ key, currentWord, userWord }) => {
-      const state = {};
       const wordStats = { misses: 0 };
       const attempt = userWord + key;
-      if (currentWord.startsWith(attempt)) {
+      const state = {
+        attemptTimestamp: Date.now(),
+        correct: currentWord.startsWith(attempt)
+      };
+
+      if (state.correct) {
         state.userWord = attempt;
       } else {
         wordStats.misses++;
       }
+
       if (attempt === currentWord) {
         state.complete = true;
         wordStats.end = Date.now();
@@ -59,6 +64,26 @@ export function letterPress(action$) {
 export function nextWord(action$) {
   return action$.ofType("NEXT_WORD").map(({ words }) => {
     const state = {};
+    const wordStats = {};
+
+    if (words.length) {
+      state.currentWord = words.pop();
+      state.words = words;
+      state.userWord = "";
+      state.complete = false;
+    } else {
+      state.finished = true;
+      wordStats.end = Date.now();
+    }
+
+    return { type: "NEXT_WORD_COMPLETE", state, wordStats };
+  });
+}
+
+export function skipWord(action$) {
+  return action$.ofType("SKIP_WORD").map(({ words }) => {
+    const state = {};
+    const wordStats = { skipped: true, end: Date.now() };
 
     if (words.length) {
       state.currentWord = words.pop();
@@ -69,6 +94,6 @@ export function nextWord(action$) {
       state.finished = true;
     }
 
-    return { type: "NEXT_WORD_COMPLETE", state };
+    return { type: "SKIP_WORD_COMPLETE", state, wordStats };
   });
 }

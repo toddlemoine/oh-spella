@@ -9,6 +9,7 @@ class Game extends Component {
     super();
     this.handleKeyPress = this.handleKeyPress.bind(this);
     this.handleSkip = this.handleSkip.bind(this);
+    this.handleRepeat = this.handleRepeat.bind(this);
   }
   componentDidMount() {
     document.addEventListener("keypress", this.handleKeyPress);
@@ -33,18 +34,15 @@ class Game extends Component {
       nextWord(words);
     }
   }
-  componentWillUpdate(nextProps) {
-    const { announce, currentWord } = this.props;
-    // if (!nextProps.finished && nextProps.currentWord !== currentWord) {
-    //   announce(`Spell: ${nextProps.currentWord}`);
-    // }
-  }
   handleKeyPress(e) {
     const { currentWord, userWord } = this.props;
     this.props.onKeyPress(e.key, currentWord, userWord);
   }
   handleSkip() {
     this.props.onSkip(this.props.words);
+  }
+  handleRepeat() {
+    this.props.repeatWord(this.props.currentWord);
   }
   render() {
     const {
@@ -68,8 +66,8 @@ class Game extends Component {
           value={currentWord}
           letters={userWord}
         />
-        <button id="repeat" disabled={complete}>
-          Say Word
+        <button id="repeat" onClick={this.handleRepeat} disabled={complete}>
+          Repeat word
         </button>
         <button onClick={this.handleSkip} disabled={complete}>
           Skip

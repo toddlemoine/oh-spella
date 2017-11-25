@@ -2,8 +2,8 @@ import { Observable } from "rxjs/Rx";
 import storage from "../storage";
 import { say as promiseSay } from "../speech";
 
-function say(text) {
-  return Observable.fromPromise(promiseSay(text));
+function say(text, options) {
+  return Observable.fromPromise(promiseSay(text, options));
 }
 
 function isValidKey(key) {
@@ -114,4 +114,11 @@ export function announce(action$) {
     .ofType("ANNOUNCE")
     .switchMap(({ text }) => say(text))
     .mapTo({ type: "ANNOUNCE_COMPLETE" });
+}
+
+export function repeatWord(action$) {
+  return action$
+    .ofType("REPEAT_WORD")
+    .switchMap(({ word }) => say(word, { rate: 0.6 }))
+    .mapTo({ type: "REPEAT_WORD_COMPLETE" });
 }

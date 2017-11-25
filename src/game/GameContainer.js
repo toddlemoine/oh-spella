@@ -5,7 +5,8 @@ import {
   initialize,
   letterPress,
   nextWord,
-  skipWord
+  skipWord,
+  repeatWord
 } from "../actions";
 import Game from "./Game";
 
@@ -29,6 +30,9 @@ function mapDispatchToProps(dispatch, ownProps) {
     },
     onSkip: words => {
       dispatch(skipWord(words));
+    },
+    repeatWord: word => {
+      dispatch(repeatWord(word));
     }
   };
 }

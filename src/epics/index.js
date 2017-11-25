@@ -108,3 +108,12 @@ export function skipWord(action$) {
     return { type: "SKIP_WORD_COMPLETE", state, wordStats };
   });
 }
+
+export function announce(action$) {
+  return action$
+    .ofType("ANNOUNCE")
+    .switchMap(({ text }) => {
+      return say(text);
+    })
+    .mapTo({ type: "ANNOUNCE_COMPLETE" });
+}

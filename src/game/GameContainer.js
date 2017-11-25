@@ -1,6 +1,12 @@
 import React from "react";
 import { connect } from "react-redux";
-import { initialize, letterPress, nextWord, skipWord } from "../actions";
+import {
+  announce,
+  initialize,
+  letterPress,
+  nextWord,
+  skipWord
+} from "../actions";
 import Game from "./Game";
 
 function mapStateToProps(state) {
@@ -9,6 +15,9 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch, ownProps) {
   return {
+    announce: word => {
+      dispatch(announce(word));
+    },
     initialize: () => {
       dispatch(initialize(ownProps.wordSetId));
     },

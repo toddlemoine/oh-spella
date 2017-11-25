@@ -18,3 +18,7 @@ export function nextWord(words, skipped = false) {
 export function skipWord(words) {
   return nextWord(words, true);
 }
+
+export function announce(text) {
+  return { type: "ANNOUNCE", text };
+}

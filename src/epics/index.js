@@ -117,8 +117,10 @@ export function announce(action$) {
 }
 
 export function repeatWord(action$) {
+  let rate = 1.0;
   return action$
     .ofType("REPEAT_WORD")
-    .switchMap(({ word }) => say(word, { rate: 0.6 }))
+    .switchMap(({ word }) => say(word, { rate }))
+    .do(() => (rate = rate === 1.0 ? 0.6 : 1.0))
     .mapTo({ type: "REPEAT_WORD_COMPLETE" });
 }

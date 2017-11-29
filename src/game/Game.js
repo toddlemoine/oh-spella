@@ -3,6 +3,7 @@ import Word from "./Word";
 import NextWordOverlay from "./NextWordOverlay";
 import GameFinished from "./GameFinished";
 import RepeatButton from "./RepeatButton";
+import SkipButton from "./SkipButton";
 import "./Game.css";
 
 class Game extends Component {
@@ -68,9 +69,7 @@ class Game extends Component {
           letters={userWord}
         />
         <RepeatButton onClick={this.handleRepeat} disabled={complete} />
-        <button onClick={this.handleSkip} disabled={complete}>
-          Skip
-        </button>
+        <SkipButton onClick={this.handleSkip} disabled={complete} />
       </div>
     );
   }

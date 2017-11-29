@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import Word from "./Word";
 import NextWordOverlay from "./NextWordOverlay";
 import GameFinished from "./GameFinished";
+import RepeatButton from "./RepeatButton";
 import "./Game.css";
 
 class Game extends Component {
@@ -66,9 +67,7 @@ class Game extends Component {
           value={currentWord}
           letters={userWord}
         />
-        <button id="repeat" onClick={this.handleRepeat} disabled={complete}>
-          Repeat word
-        </button>
+        <RepeatButton onClick={this.handleRepeat} disabled={complete} />
         <button onClick={this.handleSkip} disabled={complete}>
           Skip
         </button>

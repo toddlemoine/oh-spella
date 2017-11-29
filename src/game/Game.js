@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import Word from "./Word";
 import NextWordOverlay from "./NextWordOverlay";
-import StatsOverlay from "./StatsOverlay";
+import GameFinished from "./GameFinished";
 import "./Game.css";
 
 class Game extends Component {
@@ -49,17 +49,17 @@ class Game extends Component {
       userWord = "",
       currentWord = "",
       complete,
-      stats = [],
       words = [],
       lastLetterCorrect,
       finished
     } = this.props;
 
-    const currentStats = stats[stats.length - 1];
+    if (finished) {
+      return <GameFinished />;
+    }
 
     return (
       <div className="game">
-        {finished && <StatsOverlay stats={stats} />}
         <Word
           ref={inst => (this.word = inst)}
           lastLetterCorrect={lastLetterCorrect}

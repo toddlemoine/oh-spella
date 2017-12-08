@@ -22,8 +22,8 @@ function mapDispatchToProps(dispatch, ownProps) {
     initialize: () => {
       dispatch(initialize(ownProps.wordSetId));
     },
-    nextWord: words => {
-      dispatch(nextWord(words));
+    nextWord: (words, options) => {
+      dispatch(nextWord(words, options));
     },
     onKeyPress: (key, currentWord, userWord) => {
       dispatch(letterPress(key, currentWord, userWord));

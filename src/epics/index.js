@@ -1,6 +1,7 @@
 import { Observable } from "rxjs/Rx";
 import storage from "../storage";
 import { say as promiseSay } from "../speech";
+import shuffle from "../util/shuffle";
 
 function say(text, options) {
   return Observable.fromPromise(promiseSay(text, options));
@@ -22,6 +23,7 @@ export function initialize(action$) {
     .ofType("INITIALIZE")
     .pluck("wordSetId")
     .switchMap(id => Observable.fromPromise(loadWords(id)))
+    .map(shuffle)
     .map(words => {
       const state = {
         currentWord: words.pop(),
@@ -69,11 +71,12 @@ export function letterPress(action$) {
 }
 
 export function nextWord(action$) {
-  return action$.ofType("NEXT_WORD").map(({ words }) => {
+  return action$.ofType("NEXT_WORD").switchMap(({ words, congratulate }) => {
     const state = {};
     const wordStats = {};
+    const hasWords = words.length;
 
-    if (words.length) {
+    if (hasWords) {
       state.currentWord = words.pop();
       state.words = words;
       state.userWord = "";
@@ -83,11 +86,28 @@ export function nextWord(action$) {
       wordStats.end = Date.now();
     }
 
-    if (state.currentWord) {
-      say(`Spell: ${state.currentWord}.`);
+    if (!hasWords) {
+      console.log("Words finished.");
+      return Observable.of({ type: "NEXT_WORD_COMPLETE", state, wordStats });
     }
 
-    return { type: "NEXT_WORD_COMPLETE", state, wordStats };
+    const speech = [];
+
+    if (congratulate) {
+      speech.push(`Some nice spellin there.`);
+    }
+
+    if (state.currentWord) {
+      speech.push(`Spell: ${state.currentWord}.`);
+    }
+
+    return say(speech.join(" "))
+      .do(() => console.log("speech finished"))
+      .mapTo({
+        type: "NEXT_WORD_COMPLETE",
+        state,
+        wordStats
+      });
   });
 }
 

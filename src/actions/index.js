@@ -13,8 +13,8 @@ export function letterPress(key, currentWord, userWord) {
   return { type: LETTERPRESS, key, currentWord, userWord };
 }
 
-export function nextWord(words, skipped = false) {
-  return { type: NEXT_WORD, words, skipped };
+export function nextWord(words, options = { congratulate: false }) {
+  return { type: NEXT_WORD, words, ...options };
 }
 
 export function skipWord(words) {

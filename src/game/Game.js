@@ -27,13 +27,16 @@ class Game extends Component {
       currentWord,
       words,
       correct,
-      nextWord
+      nextWord,
+      finished
     } = this.props;
+
     if (!correct) {
       this.word.popLastLetter();
     }
-    if (userWord === currentWord) {
-      nextWord(words);
+
+    if (!finished && userWord === currentWord) {
+      setTimeout(() => nextWord(words, { congratulate: true }), 1000);
     }
   }
   handleKeyPress(e) {

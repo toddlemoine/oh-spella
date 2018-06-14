@@ -18,6 +18,17 @@ function loadWords(listParam) {
   });
 }
 
+function wordStats(attrs) {
+  return {
+    word: "",
+    start: Date.now(),
+    end: null,
+    misses: 0,
+    skipped: false,
+    ...attrs
+  };
+}
+
 export function initialize(action$) {
   return action$
     .ofType("INITIALIZE")
@@ -30,15 +41,13 @@ export function initialize(action$) {
         words
       };
 
-      const wordStats = {
-        word: state.currentWord,
-        start: Date.now(),
-        end: null,
-        misses: 0,
-        skipped: false
+      return {
+        type: "INITIALIZE_COMPLETE",
+        state,
+        wordStats: wordStats({
+          word: state.currentWord
+        })
       };
-
-      return { type: "INITIALIZE_COMPLETE", state, wordStats };
     })
     .do(({ state }) => say(`Let's begin. Spell ${state.currentWord}.`));
 }
@@ -73,7 +82,7 @@ export function letterPress(action$) {
 export function nextWord(action$) {
   return action$.ofType("NEXT_WORD").switchMap(({ words, congratulate }) => {
     const state = {};
-    const wordStats = {};
+    let _wordStats = {};
     const hasWords = words.length;
 
     if (hasWords) {
@@ -81,14 +90,17 @@ export function nextWord(action$) {
       state.words = words;
       state.userWord = "";
       state.complete = false;
+      _wordStats = wordStats({ word: state.currentWord });
     } else {
       state.finished = true;
-      wordStats.end = Date.now();
     }
 
     if (!hasWords) {
-      console.log("Words finished.");
-      return Observable.of({ type: "NEXT_WORD_COMPLETE", state, wordStats });
+      return Observable.of({
+        type: "NEXT_WORD_COMPLETE",
+        state,
+        wordStats: _wordStats
+      });
     }
 
     const speech = [];
@@ -106,7 +118,7 @@ export function nextWord(action$) {
       .mapTo({
         type: "NEXT_WORD_COMPLETE",
         state,
-        wordStats
+        wordStats: _wordStats
       });
   });
 }

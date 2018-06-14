@@ -56,11 +56,12 @@ class Game extends Component {
       complete,
       words = [],
       lastLetterCorrect,
-      finished
+      finished,
+      stats
     } = this.props;
 
     if (finished) {
-      return <GameFinished />;
+      return <GameFinished stats={stats} />;
     }
 
     return (
